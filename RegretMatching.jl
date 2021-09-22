@@ -1,20 +1,5 @@
 using StatsBase
 
-"""
-Return regret vector over actions
-"""
-function p1regret(a1::Int, a2::Int)
-    actions = [1,2,3]
-    u = reward([a1,a2])[1]
-    return [reward([a,a2])[1] - u for a in actions]
-end
-
-function p2regret(a1::Int, a2::Int)
-    actions = [1,2,3]
-    u = reward([a1,a2])[2]
-    return [reward([a1,a])[2] - u for a in actions]
-end
-
 function p1regret(a1::Int, a2::Int)
     actions = [1,2,3]
     u = reward([a1,a2])[1]
