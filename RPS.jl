@@ -88,7 +88,7 @@ function path_prob(σ::NTuple{2,Vector{Float64}}, h::RPSHist, h′::RPSHist)
     end
 end
 
-function path_prob(σ, I, i)
+function path_prob(σ::NTuple{2,Vector{Float64}}, I::Vector{RPSHist}, i::Int)
     sum(path_prob(σ, i, h) for h in I)
 end
 
@@ -147,18 +147,19 @@ function update_strategy(i::Int, I::Vector{RPSHist},σ_vec::Vector{NTuple{2, Vec
     return σ′
 end
 
-function update_strategies(I::Vector{RPSHist},σ_vec::Vector{NTuple{2, Vector{Float64}}})
-    σ′ = (zeros(Float64,3),zeros(Float64,3))
+function update_strategies(Is::NTuple{2,Vector{RPSHist}},σ_vec::Vector{NTuple{2, Vector{Float64}}})
+    σs = deepcopy(last(σ_vec)),deepcopy(last(σ_vec))
+    T = length(σ_vec)
     for i in [1,2]
         for a in [1,2,3]
-            RT = sum(sub_regret(i,I,σ,a) for σ in σ_vec)/T
+            RT = sum(sub_regret(i,Is[i],σ,a) for σ in σ_vec)/T
             RTp = max(RT,0)
-            σ′[i][a] = RTp
+            σs[i][i][a] = RTp
         end
-        s = sum(σ′[i])
-        s == 0 ? fill!(σ′[i],1/3) : σ′[i] .= σ′[i] ./ s
+        s = sum(σs[i][i])
+        s == 0 ? fill!(σ[i][i],1/3) : σs[i][i] .= σs[i][i] ./ s
     end
-
+    σ′ = (first(σs)[1],last(σs)[2])
     # append σ′ to list of strats
     push!(σ_vec, σ′)
     return σ′
