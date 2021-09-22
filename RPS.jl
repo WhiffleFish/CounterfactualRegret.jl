@@ -1,30 +1,13 @@
 using Plots
 const RPSHist = Vector{Int}
 
-function reward(h::RPSHist)
-    a1, a2 = h
-    if a1 == a2
-        return (0,0)
-    elseif a1 === 1
-        if a2 === 2
-            return (-1,1)
-        else
-            return (1,-1)
-        end
-    elseif a1 === 2
-        if a2 === 1
-            return (1,-1)
-        else
-            return (-1,1)
-        end
-    else
-        if a2 === 1
-            return (-1,1)
-        else
-            return (1,-1)
-        end
-    end
-end
+const R = [
+    (0,0) (-1,1) (1,-1);
+    (1,-1) (0,0) (-1,1);
+    (-1,1) (1,-1) (0,0)
+]
+
+reward(h::RPSHist) = R[h...]
 
 const term = [[i,j] for i in [1,2,3], j in [1,2,3]]
 
@@ -124,7 +107,7 @@ function u(i::Int, I::Vector{RPSHist}, a::Int, σ::NTuple{2,Vector{Float64}})
 end
 
 function sub_regret(i::Int,I::Vector{RPSHist},σ::NTuple{2, Vector{Float64}},a::Int)
-    path_prob(σ, -i, I)*(u(i,I,a,σ) - u(i, I, σ))
+    max(path_prob(σ, I, -i)*(u(i,I,a,σ) - u(i, I, σ)),0)
 end
 
 function immediate_regret(i::Int, I::Vector{RPSHist}, σ::NTuple{2, Vector{Float64}})
@@ -166,7 +149,7 @@ function update_strategies(Is::NTuple{2,Vector{RPSHist}},σ_vec::Vector{NTuple{2
 end
 
 function plot_strats(σ_vec::Vector{NTuple{2, Vector{Float64}}})
-    d = Dict(1=>"rock", 2=>"paper", 3=>"scissors")
+    d = Dict(1=>"Rock", 2=>"Paper", 3=>"Scissors")
     p1 = plot()
     for i in 1:3
         plot!(p1, [σ_vec[j][1][i] for j in eachindex(σ_vec)], label=d[i])
@@ -175,5 +158,9 @@ function plot_strats(σ_vec::Vector{NTuple{2, Vector{Float64}}})
     for i in 1:3
         plot!(p2, [σ_vec[j][2][i] for j in eachindex(σ_vec)], label="")
     end
+    title!(p1, "Player 1")
+    ylabel!(p1, "Strategy Action Proportion")
+    title!(p2, "Player 2")
     plot(p1, p2, layout= @layout [a b])
+    xlabel!("Training Steps")
 end
