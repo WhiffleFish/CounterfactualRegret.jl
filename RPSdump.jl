@@ -1,5 +1,7 @@
 include("RPS.jl")
 
+using ProgressMeter
+
 I0 =  [Int[]]
 I1 = [Int[1], Int[2], Int[3]]
 
@@ -9,7 +11,7 @@ player2_strat = [0.50, 0.25, 0.25]
 function train(player1_strat, player2_strat, N::Int)
     σ = (player1_strat, player2_strat)
     strat_hist = [σ]
-    for i in 2:N
+    @showprogress for i in 2:N
         update_strategies((I0,I1), strat_hist)
     end
     return strat_hist
