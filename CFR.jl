@@ -1,8 +1,14 @@
 using Plots
 using ProgressMeter
+import Base.==
 
 const SimpleIOHist = Vector{Int}
 const InfoState = Vector{SimpleIOHist}
+
+struct NullVec end
+==(::NullVec,v) = isempty(v)
+==(v,::NullVec) = isempty(v)
+Base.length(::NullVec) = 0
 
 struct SimpleIOGame{T}
     R::Matrix{NTuple{2,T}}
@@ -32,16 +38,18 @@ end
 
 function SimpleIOPlayer(game::SimpleIOGame, id::Int)
     n_actions = size(game.R, id)
+    strategy = fill(1/n_actions, n_actions)
     SimpleIOPlayer(
         id,
         game,
-        fill(1/n_actions, n_actions),
+        strategy,
         [deepcopy(strategy)],
     )
 end
 
 function SimpleIOPlayer(game::SimpleIOGame, id::Int, strategy::Vector{Float64})
     n_actions = size(game.R, id)
+    strategy = fill(1/n_actions, n_actions)
     SimpleIOPlayer(
         id,
         game,
@@ -56,12 +64,12 @@ function clear!(p::SimpleIOPlayer)
 end
 
 function terminals(game::SimpleIOGame, h)
-    if length(h) == 0
+    if length(h) === 0
         return game.terminals
-    elseif length(h) == 1
+    elseif length(h) === 1
         return game.terminals[h[1],:]
     else
-        return [h]
+         return [h]
     end
 end
 
@@ -69,10 +77,10 @@ player(::SimpleIOGame, h) = length(h) < 1 ? 1 : 2
 player(h) = length(h) < 1 ? 1 : 2
 
 
-path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h′::SimpleIOHist) = path_prob(σ,i,Int[], h′)
-path_prob(σ::NTuple{2,Vector{Float64}}, h′::SimpleIOHist) = path_prob(σ,Int[], h′)
+path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h′::SimpleIOHist) = path_prob(σ,i,NullVec(), h′)
+path_prob(σ::NTuple{2,Vector{Float64}}, h′::SimpleIOHist) = path_prob(σ,NullVec(), h′)
 
-function path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h::SimpleIOHist, h′::SimpleIOHist)
+function path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h, h′)
     if i < 0
         return neg_path_prob(σ, -i, h, h′)
     else
@@ -80,42 +88,46 @@ function path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h::SimpleIOHist, h′:
     end
 end
 
-function neg_path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h::SimpleIOHist, h′::SimpleIOHist)
+function neg_path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h, h′)
     if h′ == h
         return 1.0
     else
         act = last(h′)
-        h′ = h′[1:end-1]
+        h′ = @view h′[1:end-1]
         player_turn = player(h′)
         prob = (player_turn != i) ? σ[player_turn][act] : 1.0
         return prob*neg_path_prob(σ, i, h, h′)
     end
 end
 
-function path_prob(σ_i::Vector{Float64}, i::Int, h::SimpleIOHist, h′::SimpleIOHist)
+function path_prob(σ_i::Vector{Float64}, i::Int, h, h′)
     if h′ == h
         return 1.0
     else
         act = last(h′)
-        h′ = h′[1:end-1]
+        h′ = @view h′[1:end-1]
         prob = (player(h′) == i) ? σ_i[act] : 1.0
         return prob*path_prob(σ_i, i, h, h′)
     end
 end
 
-function path_prob(σ::NTuple{2,Vector{Float64}}, h::SimpleIOHist, h′::SimpleIOHist)
+function path_prob(σ::NTuple{2,Vector{Float64}}, h, h′)
     if h′ == h
         return 1.0
     else
         act = last(h′)
-        h′ = h′[1:end-1]
+        h′ = @view h′[1:end-1]
         prob = σ[player(h′)][act]
         return prob*path_prob(σ, h, h′)
     end
 end
 
 function path_prob(σ::NTuple{2,Vector{Float64}}, I::InfoState, i::Int)
-    sum(path_prob(σ, i, h) for h in I)
+    s = 0.0
+    for h in I
+        s += path_prob(σ, i, h)
+    end
+    return s
 end
 
 function u(game::SimpleIOGame, i::Int, h′::SimpleIOHist)
@@ -151,6 +163,15 @@ end
 
 function sub_regret(game::SimpleIOGame,i::Int,I::Vector{SimpleIOHist},σ::NTuple{2, Vector{Float64}},a::Int)
     max(path_prob(σ, I, -i)*(u(game,i,I,a,σ) - u(game,i, I, σ)),0)
+end
+
+function regret(game, i, I, a, p1, p2)
+    RT = 0.0
+    for σ in zip(p1.hist, p2.hist)
+        RT += sub_regret(game, i, I, σ, a)
+    end
+    RT /= length(p1.hist)
+    return max(RT,0)
 end
 
 function update_strategy!(game::SimpleIOGame, I::InfoState, p1::SimpleIOPlayer, p2::SimpleIOPlayer; pushp2::Bool=true)
@@ -194,7 +215,7 @@ function update_strategies!(game::SimpleIOGame, Is::NTuple{2,InfoState}, p1::Sim
     return σ1, σ2
 end
 
-function train_both!(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
+function train_both!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int)
     I1 = SimpleInfoState(game, 1)
     I2 = SimpleInfoState(game, 2)
     @showprogress for i in 1:N
@@ -203,7 +224,7 @@ function train_both!(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
     return p1, p2
 end
 
-function train_one!(p1, p2)
+function train_one!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int)
     I = SimpleInfoState(game, 1)
     @showprogress for i in 1:N
         update_strategy!(p1.game, I, p1, p2)
@@ -217,7 +238,7 @@ function plot_strats(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
         Plots.plot!(plt1, [p1.hist[j][i] for j in 1:length(p1.hist)], label=i)
     end
     plt2 = Plots.plot()
-    for i in 1:3
+    for i in 1:length(p2.strategy)
         Plots.plot!(plt2, [p2.hist[j][i] for j in 1:length(p2.hist)], label="")
     end
     title!(plt1, "Player 1")
