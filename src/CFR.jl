@@ -1,4 +1,5 @@
 using Plots
+import Plots.plot
 using ProgressMeter
 import Base.==
 
@@ -49,7 +50,6 @@ end
 
 function SimpleIOPlayer(game::SimpleIOGame, id::Int, strategy::Vector{Float64})
     n_actions = size(game.R, id)
-    strategy = fill(1/n_actions, n_actions)
     SimpleIOPlayer(
         id,
         game,
@@ -216,6 +216,7 @@ function update_strategies!(game::SimpleIOGame, Is::NTuple{2,InfoState}, p1::Sim
 end
 
 function train_both!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int)
+    game = p1.game
     I1 = SimpleInfoState(game, 1)
     I2 = SimpleInfoState(game, 2)
     @showprogress for i in 1:N
@@ -232,7 +233,7 @@ function train_one!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int)
     return p1
 end
 
-function plot_strats(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
+function Plots.plot(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
     plt1 = Plots.plot()
     for i in 1:length(p1.strategy)
         Plots.plot!(plt1, [p1.hist[j][i] for j in 1:length(p1.hist)], label=i)

@@ -1,5 +1,6 @@
 using StatsBase
 using Plots
+import Plots.plot
 # restricted to 2-player game
 struct MatrixGame{T}
     R::Matrix{NTuple{2,T}}
@@ -126,7 +127,7 @@ function train_one!(p1::MatrixPlayer, p2::MatrixPlayer, N::Int)
     finalize_strategy!(p1)
 end
 
-function plot(p1::MatrixPlayer, p2::MatrixPlayer)
+function Plots.plot(p1::MatrixPlayer, p2::MatrixPlayer)
     plot1 = Plots.plot()
     for i in 1:length(p1.strategy)
         plot!(plot1, [p1.hist[j][i] for j in eachindex(p1.hist)], label=i)
