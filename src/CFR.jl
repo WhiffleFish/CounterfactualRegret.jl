@@ -35,6 +35,7 @@ struct SimpleIOPlayer{T}
     game::SimpleIOGame{T}
     strategy::Vector{Float64}
     hist::Vector{Vector{Float64}}
+    regret_avg::Vector{Float64} # N inferrable by `length(hist)-1`
 end
 
 function SimpleIOPlayer(game::SimpleIOGame, id::Int)
@@ -45,6 +46,7 @@ function SimpleIOPlayer(game::SimpleIOGame, id::Int)
         game,
         strategy,
         [deepcopy(strategy)],
+        zeros(n_actions),
     )
 end
 
@@ -55,12 +57,14 @@ function SimpleIOPlayer(game::SimpleIOGame, id::Int, strategy::Vector{Float64})
         game,
         strategy,
         [deepcopy(strategy)],
+        zeros(n_actions),
     )
 end
 
 function clear!(p::SimpleIOPlayer)
     resize!(p.hist, 1)
     p.hist[1] .= p.strategy
+    p.regret_avg .= 0.0
 end
 
 function terminals(game::SimpleIOGame, h)
@@ -176,12 +180,14 @@ end
 
 function update_strategy!(game::SimpleIOGame, I::InfoState, p1::SimpleIOPlayer, p2::SimpleIOPlayer; pushp2::Bool=true)
     σ = p1.strategy
+    ra = p1.regret_avg
     T = length(p1.hist)
     for a in 1:length(σ)
-        RT = sum(sub_regret(game,1,I,σ,a) for σ in zip(p1.hist,p2.hist))/T
-        RTp = max(RT,0)
-        σ[a] = RTp
+        sr = sub_regret(game,1,I,(last(p1.hist),last(p2.hist)),a)
+        ra[a] += (sr-ra[a])/T
     end
+    copyto!(σ,ra)
+
     s = sum(σ)
     s == 0 ? fill!(σ,1/3) : σ ./= s
     push!(p1.hist, deepcopy(σ))
@@ -191,27 +197,29 @@ end
 
 function update_strategies!(game::SimpleIOGame, Is::NTuple{2,InfoState}, p1::SimpleIOPlayer, p2::SimpleIOPlayer)
     σ1 = p1.strategy
+    ra1 = p1.regret_avg
     T1 = length(p1.hist)
     for a in 1:length(σ1)
-        RT = sum(sub_regret(game,1,Is[1],σ,a) for σ in zip(p1.hist,p2.hist))/T1
-        RTp = max(RT,0)
-        σ1[a] = RTp
+        sr = sub_regret(game,1,Is[1],(last(p1.hist),last(p2.hist)),a)
+        ra1[a] += (sr-ra1[a])/T1
     end
+    copyto!(σ1, ra1)
     s = sum(σ1)
     s == 0 ? fill!(σ1,1/3) : σ1 ./= s
-    push!(p1.hist, deepcopy(σ1))
 
     σ2 = p2.strategy
+    ra2 = p2.regret_avg
     T2 = length(p2.hist)
-    for a in 1:1:length(σ2)
-        RT = sum(sub_regret(game,2,Is[2],σ,a) for σ in zip(p1.hist,p2.hist))/T2
-        RTp = max(RT,0)
-        σ2[a] = RTp
+    for a in 1:length(σ2)
+        sr = sub_regret(game,2,Is[2],(last(p1.hist),last(p2.hist)),a)
+        ra2[a] += (sr-ra2[a])/T2
     end
+    copyto!(σ2, ra2)
     s = sum(σ2)
     s == 0 ? fill!(σ2,1/3) : σ2 ./= s
-    push!(p2.hist, deepcopy(σ2))
 
+    push!(p1.hist, deepcopy(σ1))
+    push!(p2.hist, deepcopy(σ2))
     return σ1, σ2
 end
 
@@ -226,7 +234,7 @@ function train_both!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int)
 end
 
 function train_one!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int)
-    I = SimpleInfoState(game, 1)
+    I = SimpleInfoState(p1.game, 1)
     @showprogress for i in 1:N
         update_strategy!(p1.game, I, p1, p2)
     end
