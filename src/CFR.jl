@@ -2,6 +2,7 @@ using Plots
 import Plots.plot
 using ProgressMeter
 import Base.==
+include("TerminalCache.jl")
 
 const SimpleIOHist = Vector{Int}
 const InfoState = Vector{SimpleIOHist}
@@ -14,6 +15,7 @@ Base.length(::NullVec) = 0
 struct SimpleIOGame{T}
     R::Matrix{NTuple{2,T}}
     terminals::Matrix{Vector{Int}}
+    _terminal_cache::TerminalCache
 end
 
 function SimpleInfoState(g::SimpleIOGame, i::Int)
@@ -27,7 +29,7 @@ end
 function SimpleIOGame(R::Matrix{NTuple{2,T}}) where T
     s = size(R)
     terminals = [[i,j] for i in 1:s[1], j in 1:s[2]]
-    return SimpleIOGame(R,terminals)
+    return SimpleIOGame(R,terminals, TerminalCache(terminals))
 end
 
 struct SimpleIOPlayer{T}
@@ -68,13 +70,7 @@ function clear!(p::SimpleIOPlayer)
 end
 
 function terminals(game::SimpleIOGame, h)
-    if length(h) === 0
-        return game.terminals
-    elseif length(h) === 1
-        return game.terminals[h[1],:]
-    else
-         return [h]
-    end
+    return game._terminal_cache[h]
 end
 
 player(::SimpleIOGame, h) = length(h) < 1 ? 1 : 2
