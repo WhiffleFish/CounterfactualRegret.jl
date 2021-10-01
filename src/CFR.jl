@@ -1,21 +1,22 @@
 using Plots
 import Plots.plot
 using ProgressMeter
+using PushVectors
 import Base.==
 include("TerminalCache.jl")
 
-const SimpleIOHist = Vector{Int}
-const InfoState = Vector{SimpleIOHist}
+const SimpleIOHist = AbstractVector{Int}
+const InfoState = Vector{Vector{Int}}
 
-struct NullVec end
-==(::NullVec,v) = isempty(v)
-==(v,::NullVec) = isempty(v)
+struct NullVec <: AbstractVector{Int} end
+Base.size(::NullVec) = (0,)
 Base.length(::NullVec) = 0
 
 struct SimpleIOGame{T}
     R::Matrix{NTuple{2,T}}
     terminals::Matrix{Vector{Int}}
     _terminal_cache::TerminalCache
+    _util_cache::PushVector{Int, Vector{Int}}
 end
 
 function SimpleInfoState(g::SimpleIOGame, i::Int)
@@ -29,7 +30,7 @@ end
 function SimpleIOGame(R::Matrix{NTuple{2,T}}) where T
     s = size(R)
     terminals = [[i,j] for i in 1:s[1], j in 1:s[2]]
-    return SimpleIOGame(R,terminals, TerminalCache(terminals))
+    return SimpleIOGame(R,terminals, TerminalCache(terminals), PushVector{Int}(2))
 end
 
 struct SimpleIOPlayer{T}
@@ -54,6 +55,7 @@ end
 
 function SimpleIOPlayer(game::SimpleIOGame, id::Int, strategy::Vector{Float64})
     n_actions = size(game.R, id)
+    @assert size(game.R, id) == length(strategy)
     SimpleIOPlayer(
         id,
         game,
@@ -69,18 +71,18 @@ function clear!(p::SimpleIOPlayer)
     p.regret_avg .= 0.0
 end
 
-function terminals(game::SimpleIOGame, h)
+function terminals(game::SimpleIOGame, h::AbstractVector{Int})
     return game._terminal_cache[h]
 end
 
-player(::SimpleIOGame, h) = length(h) < 1 ? 1 : 2
+player(::SimpleIOGame, h::AbstractVector{Int}) = length(h) < 1 ? 1 : 2
 player(h) = length(h) < 1 ? 1 : 2
 
 
-path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h′::SimpleIOHist) = path_prob(σ,i,NullVec(), h′)
-path_prob(σ::NTuple{2,Vector{Float64}}, h′::SimpleIOHist) = path_prob(σ,NullVec(), h′)
+path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h′::AbstractVector{Int}) = path_prob(σ,i,NullVec(), h′)
+path_prob(σ::NTuple{2,Vector{Float64}}, h′::AbstractVector{Int}) = path_prob(σ,NullVec(), h′)
 
-function path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h, h′)
+function path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h::AbstractVector{Int}, h′::AbstractVector{Int})
     if i < 0
         return neg_path_prob(σ, -i, h, h′)
     else
@@ -88,7 +90,7 @@ function path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h, h′)
     end
 end
 
-function neg_path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h, h′)
+function neg_path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h::AbstractVector{Int}, h′::AbstractVector{Int})
     if h′ == h
         return 1.0
     else
@@ -100,7 +102,7 @@ function neg_path_prob(σ::NTuple{2,Vector{Float64}}, i::Int, h, h′)
     end
 end
 
-function path_prob(σ_i::Vector{Float64}, i::Int, h, h′)
+function path_prob(σ_i::Vector{Float64}, i::Int, h::AbstractVector{Int}, h′::AbstractVector{Int})
     if h′ == h
         return 1.0
     else
@@ -111,15 +113,15 @@ function path_prob(σ_i::Vector{Float64}, i::Int, h, h′)
     end
 end
 
-function path_prob(σ::NTuple{2,Vector{Float64}}, h, h′)
-    if h′ == h
-        return 1.0
-    else
+function path_prob(σ::NTuple{2,Vector{Float64}}, h::AbstractVector{Int}, h′::AbstractVector{Int})
+    p = 1.0
+    while h′ != h
         act = last(h′)
         h′ = @view h′[1:end-1]
         prob = σ[player(h′)][act]
-        return prob*path_prob(σ, h, h′)
+        return p *= prob
     end
+    return p
 end
 
 function path_prob(σ::NTuple{2,Vector{Float64}}, I::InfoState, i::Int)
@@ -130,7 +132,7 @@ function path_prob(σ::NTuple{2,Vector{Float64}}, I::InfoState, i::Int)
     return s
 end
 
-function u(game::SimpleIOGame, i::Int, h′::SimpleIOHist)
+function u(game::SimpleIOGame, i::Int, h′::AbstractVector{Int})
     game.R[h′[1], h′[2]][i]
 end
 
@@ -147,31 +149,24 @@ function u(game::SimpleIOGame, i::Int, I::InfoState, σ::NTuple{2,Vector{Float64
     return num/den
 end
 
-function u(game::SimpleIOGame, i::Int, I::Vector{SimpleIOHist}, a::Int, σ::NTuple{2,Vector{Float64}})
+function u(game::SimpleIOGame, i::Int, I::InfoState, a::Int, σ::NTuple{2,Vector{Float64}})
     num = 0.0
     den = 0.0
-    for h in I
-        h = [h;a] # what if it isn't the player's turn?
+    for hk in I
+        h = append!(game._util_cache,  hk)
+        push!(h, a)
         pi_I = path_prob(σ, -i, h)
         den += pi_I
         for h′ in terminals(game,h)
             num += pi_I*path_prob(σ,h,h′)*u(game,i,h′)
         end
+        empty!(h)
     end
     return num/den
 end
 
-function sub_regret(game::SimpleIOGame,i::Int,I::Vector{SimpleIOHist},σ::NTuple{2, Vector{Float64}},a::Int)
+function sub_regret(game::SimpleIOGame,i::Int,I::InfoState,σ::NTuple{2, Vector{Float64}},a::Int)
     max(path_prob(σ, I, -i)*(u(game,i,I,a,σ) - u(game,i, I, σ)),0)
-end
-
-function regret(game, i, I, a, p1, p2)
-    RT = 0.0
-    for σ in zip(p1.hist, p2.hist)
-        RT += sub_regret(game, i, I, σ, a)
-    end
-    RT /= length(p1.hist)
-    return max(RT,0)
 end
 
 function update_strategy!(game::SimpleIOGame, I::InfoState, p1::SimpleIOPlayer, p2::SimpleIOPlayer; pushp2::Bool=true)
@@ -214,8 +209,12 @@ function update_strategies!(game::SimpleIOGame, Is::NTuple{2,InfoState}, p1::Sim
     s = sum(σ2)
     s == 0 ? fill!(σ2,1/3) : σ2 ./= s
 
-    push!(p1.hist, deepcopy(σ1))
-    push!(p2.hist, deepcopy(σ2))
+    σ1′ = Vector{Float64}(undef, length(σ1))
+    copyto!(σ1′, σ1)
+    push!(p1.hist, σ1′)
+    σ2′ = Vector{Float64}(undef, length(σ2))
+    copyto!(σ2′, σ2)
+    push!(p2.hist, σ2′)
     return σ1, σ2
 end
 
@@ -223,8 +222,11 @@ function train_both!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int)
     game = p1.game
     I1 = SimpleInfoState(game, 1)
     I2 = SimpleInfoState(game, 2)
+    L1 = length(p1.hist)
+    L2 = length(p2.hist)
+
     @showprogress for i in 1:N
-        update_strategies!(game, (I1,I2), p1, p2)
+        σ1, σ2 = update_strategies!(game, (I1,I2), p1, p2)
     end
     return p1, p2
 end

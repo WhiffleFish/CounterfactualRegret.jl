@@ -3,7 +3,7 @@ using Plots
 
 game = SimpleIOGame([
     (0,0) (-1,1) (1,-1);
-    (-1,1) (0,0) (-1,1);
+    (1,-1) (0,0) (-1,1);
     (-1,1) (1,-1) (0,0)
 ])
 
@@ -14,4 +14,4 @@ train_both!(p1,p2,10_000)
 train_one!(p1,p2,1000)
 plot(p1, p2)
 
-@profiler train_both!(p1,p2, 50000) recur=:flat
+@profiler train_both!(p1,p2, 50_000) recur=:flat
