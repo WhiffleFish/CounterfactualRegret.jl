@@ -114,14 +114,14 @@ function path_prob(σ_i::Vector{Float64}, i::Int, h::AbstractVector{Int}, h′::
 end
 
 function path_prob(σ::NTuple{2,Vector{Float64}}, h::AbstractVector{Int}, h′::AbstractVector{Int})
-    p = 1.0
-    while h′ != h
+    if h′ == h
+        return 1.0
+    else
         act = last(h′)
         h′ = @view h′[1:end-1]
         prob = σ[player(h′)][act]
-        return p *= prob
+        return prob*path_prob(σ, h, h′)
     end
-    return p
 end
 
 function path_prob(σ::NTuple{2,Vector{Float64}}, I::InfoState, i::Int)
@@ -218,22 +218,22 @@ function update_strategies!(game::SimpleIOGame, Is::NTuple{2,InfoState}, p1::Sim
     return σ1, σ2
 end
 
-function train_both!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int)
+function train_both!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int; progress::Bool=false)
     game = p1.game
     I1 = SimpleInfoState(game, 1)
     I2 = SimpleInfoState(game, 2)
     L1 = length(p1.hist)
     L2 = length(p2.hist)
 
-    @showprogress for i in 1:N
+    @showprogress enabled=!progress for i in 1:N
         σ1, σ2 = update_strategies!(game, (I1,I2), p1, p2)
     end
     return p1, p2
 end
 
-function train_one!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int)
+function train_one!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int; progress::Bool=false)
     I = SimpleInfoState(p1.game, 1)
-    @showprogress for i in 1:N
+    @showprogress enabled=!progress for i in 1:N
         update_strategy!(p1.game, I, p1, p2)
     end
     return p1
