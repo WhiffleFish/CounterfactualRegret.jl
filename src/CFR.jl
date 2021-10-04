@@ -1,5 +1,6 @@
 using Plots
 import Plots.plot
+using LaTeXStrings
 using ProgressMeter
 using PushVectors
 import Base.==
@@ -166,23 +167,34 @@ function u(game::SimpleIOGame, i::Int, I::InfoState, a::Int, σ::NTuple{2,Vector
 end
 
 function sub_regret(game::SimpleIOGame,i::Int,I::InfoState,σ::NTuple{2, Vector{Float64}},a::Int)
-    max(path_prob(σ, I, -i)*(u(game,i,I,a,σ) - u(game,i, I, σ)),0)
+    path_prob(σ, I, -i)*(u(game,i,I,a,σ) - u(game,i, I, σ))
 end
 
 function update_strategy!(game::SimpleIOGame, I::InfoState, p1::SimpleIOPlayer, p2::SimpleIOPlayer; pushp2::Bool=true)
     σ = p1.strategy
     ra = p1.regret_avg
     T = length(p1.hist)
+    norm_sum = 0.0
     for a in 1:length(σ)
         sr = sub_regret(game,1,I,(last(p1.hist),last(p2.hist)),a)
         ra[a] += (sr-ra[a])/T
+        if ra[a] > 0.0
+            norm_sum += ra[a]
+            σ[a] = ra[a]
+        else
+            σ[a] = 0.0
+        end
     end
-    copyto!(σ,ra)
+    norm_sum === 0 ? fill!(σ,1/3) : σ ./= norm_sum
 
-    s = sum(σ)
-    s == 0 ? fill!(σ,1/3) : σ ./= s
-    push!(p1.hist, deepcopy(σ))
-    pushp2 && push!(p2.hist, deepcopy(p2.strategy)) # consider changing
+    σ1′ = Vector{Float64}(undef, length(σ))
+    copyto!(σ1′, σ)
+    push!(p1.hist, σ1′)
+    if pushp2
+        σ2′ = Vector{Float64}(undef, length(p2.strategy))
+        copyto!(σ2′, p2.strategy)
+        push!(p2.hist, σ2′)
+    end
     return σ
 end
 
@@ -190,24 +202,35 @@ function update_strategies!(game::SimpleIOGame, Is::NTuple{2,InfoState}, p1::Sim
     σ1 = p1.strategy
     ra1 = p1.regret_avg
     T1 = length(p1.hist)
+    norm_sum = 0.0
     for a in 1:length(σ1)
         sr = sub_regret(game,1,Is[1],(last(p1.hist),last(p2.hist)),a)
         ra1[a] += (sr-ra1[a])/T1
+        if ra1[a] > 0.0
+            norm_sum += ra1[a]
+            σ1[a] = ra1[a]
+        else
+            σ1[a] = 0.0
+        end
     end
-    copyto!(σ1, ra1)
-    s = sum(σ1)
-    s == 0 ? fill!(σ1,1/3) : σ1 ./= s
+
+    norm_sum === 0 ? fill!(σ1,1/3) : σ1 ./= norm_sum
 
     σ2 = p2.strategy
     ra2 = p2.regret_avg
     T2 = length(p2.hist)
+    norm_sum = 0.0
     for a in 1:length(σ2)
         sr = sub_regret(game,2,Is[2],(last(p1.hist),last(p2.hist)),a)
         ra2[a] += (sr-ra2[a])/T2
+        if ra2[a] > 0.0
+            norm_sum += ra2[a]
+            σ2[a] = ra2[a]
+        else
+            σ2[a] = 0.0
+        end
     end
-    copyto!(σ2, ra2)
-    s = sum(σ2)
-    s == 0 ? fill!(σ2,1/3) : σ2 ./= s
+    norm_sum === 0 ? fill!(σ2,1/3) : σ2 ./= norm_sum
 
     σ1′ = Vector{Float64}(undef, length(σ1))
     copyto!(σ1′, σ1)
@@ -239,15 +262,26 @@ function train_one!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int; progress::Bo
     return p1
 end
 
+function cumulative_strategies(p::SimpleIOPlayer)
+    mat = Matrix{Float64}(undef, length(p.hist), length(p.strategy))
+    σ = zeros(Float64, length(p.strategy))
+
+    for (i,σ_i) in enumerate(p.hist)
+        σ = σ + (σ_i - σ)/i
+        mat[i,:] .= σ
+    end
+    return mat
+end
+
 function Plots.plot(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
-    plt1 = Plots.plot()
-    for i in 1:length(p1.strategy)
-        Plots.plot!(plt1, [p1.hist[j][i] for j in 1:length(p1.hist)], label=i)
-    end
-    plt2 = Plots.plot()
-    for i in 1:length(p2.strategy)
-        Plots.plot!(plt2, [p2.hist[j][i] for j in 1:length(p2.hist)], label="")
-    end
+    L = length(p1.strategy)
+    labels = Matrix{String}(undef, 1, L)
+    for i in eachindex(labels); labels[i] = L"a_%$(i)"; end
+
+    plt1 = Plots.plot(cumulative_strategies(p1), labels=labels)
+
+    plt2 = Plots.plot(cumulative_strategies(p2), labels="")
+
     title!(plt1, "Player 1")
     ylabel!(plt1, "Strategy Action Proportion")
     title!(plt2, "Player 2")
