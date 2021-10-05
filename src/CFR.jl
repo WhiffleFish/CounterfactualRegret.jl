@@ -249,8 +249,10 @@ function train_both!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int; progress::B
     L2 = length(p2.hist)
 
     @showprogress enabled=!progress for i in 1:N
-        σ1, σ2 = update_strategies!(game, (I1,I2), p1, p2)
+        update_strategies!(game, (I1,I2), p1, p2)
     end
+    finalize_strategy!(p1)
+    finalize_strategy!(p2)
     return p1, p2
 end
 
@@ -259,6 +261,7 @@ function train_one!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int; progress::Bo
     @showprogress enabled=!progress for i in 1:N
         update_strategy!(p1.game, I, p1, p2)
     end
+    finalize_strategy!(p1)
     return p1
 end
 
@@ -271,6 +274,18 @@ function cumulative_strategies(p::SimpleIOPlayer)
         mat[i,:] .= σ
     end
     return mat
+end
+
+function avg_strat(p::SimpleIOPlayer)
+    return sum(p.hist)/length(p.hist)
+end
+
+function finalize_strategy!(p::SimpleIOPlayer) # `sum` causes gc
+    σ = p.strategy .= 0.0
+    for σ_i in p.hist
+        σ .+= σ_i
+    end
+    σ ./= sum(σ)
 end
 
 function Plots.plot(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
@@ -287,4 +302,16 @@ function Plots.plot(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
     title!(plt2, "Player 2")
     plot(plt1, plt2, layout= @layout [a b])
     xlabel!("Training Steps")
+end
+
+function Plots.plot(p::SimpleIOPlayer)
+    L = length(p.strategy)
+    labels = Matrix{String}(undef, 1, L)
+    for i in eachindex(labels); labels[i] = L"a_%$(i)"; end
+
+    plt = Plots.plot(cumulative_strategies(p), labels=labels)
+
+    title!(plt, "Player 1")
+    ylabel!(plt, "Strategy Action Proportion")
+    xlabel!(plt, "Training Steps")
 end

@@ -1,5 +1,6 @@
 using StatsBase
 using Plots
+using LaTeXStrings
 import Plots.plot
 # restricted to 2-player game
 struct MatrixGame{T}
@@ -93,13 +94,20 @@ end
 
 function update_strategy!(p::MatrixPlayer)
     fill_normed_regret!(p.strategy, p.regret_sum)
-    push!(p.hist, deepcopy(p.strategy))
-    p.strat_sum .+= p.strategy
+    σ = p.strategy
+    σ′ = Vector{Float64}(undef, length(σ))
+    copyto!(σ′, σ)
+    push!(p.hist, σ′)
+
+    p.strat_sum .+= σ
 end
 
 function finalize_strategy!(p::MatrixPlayer)
-    p.strategy .= sum(p.hist)
-    p.strategy ./= sum(p.strategy)
+    σ = p.strategy .= 0.0
+    for σ_i in p.hist
+        σ .+= σ_i
+    end
+    σ ./= sum(σ)
 end
 
 function train_both!(p1::MatrixPlayer, p2::MatrixPlayer, N::Int)
@@ -127,27 +135,41 @@ function train_one!(p1::MatrixPlayer, p2::MatrixPlayer, N::Int)
     finalize_strategy!(p1)
 end
 
+function cumulative_strategies(p::MatrixPlayer)
+    mat = Matrix{Float64}(undef, length(p.hist), length(p.strategy))
+    σ = zeros(Float64, length(p.strategy))
+
+    for (i,σ_i) in enumerate(p.hist)
+        σ = σ + (σ_i - σ)/i
+        mat[i,:] .= σ
+    end
+    return mat
+end
+
 function Plots.plot(p1::MatrixPlayer, p2::MatrixPlayer)
-    plot1 = Plots.plot()
-    for i in 1:length(p1.strategy)
-        plot!(plot1, [p1.hist[j][i] for j in eachindex(p1.hist)], label=i)
-    end
-    plot2 = Plots.plot()
-    for i in 1:length(p2.strategy)
-        plot!(plot2, [p2.hist[j][i] for j in eachindex(p2.hist)], label="")
-    end
-    title!(plot1, "Player 1")
-    ylabel!(plot1, "Strategy Action Proportion")
-    title!(plot2, "Player 2")
-    Plots.plot(plot1, plot2, layout= @layout [a b])
+    L = length(p1.strategy)
+    labels = Matrix{String}(undef, 1, L)
+    for i in eachindex(labels); labels[i] = L"a_%$(i)"; end
+
+    plt1 = Plots.plot(cumulative_strategies(p1), labels=labels)
+
+    plt2 = Plots.plot(cumulative_strategies(p2), labels="")
+
+    title!(plt1, "Player 1")
+    ylabel!(plt1, "Strategy Action Proportion")
+    title!(plt2, "Player 2")
+    plot(plt1, plt2, layout= @layout [a b])
     xlabel!("Training Steps")
 end
 
-function plot(p1::MatrixPlayer)
-    plot1 = Plots.plot()
-    for i in 1:length(p1.strategy)
-        plot!(plot1, [p1.hist[j][i] for j in eachindex(p1.hist)], label=i)
-    end
-    ylabel!(plot1, "Strategy Action Proportion")
-    return plot1
+function Plots.plot(p::MatrixPlayer)
+    L = length(p.strategy)
+    labels = Matrix{String}(undef, 1, L)
+    for i in eachindex(labels); labels[i] = L"a_%$(i)"; end
+
+    plt = Plots.plot(cumulative_strategies(p), labels=labels)
+
+    title!(plt, "Player 1")
+    ylabel!(plt, "Strategy Action Proportion")
+    xlabel!(plt, "Training Steps")
 end
