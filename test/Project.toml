@@ -1,5 +1,6 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 HelloCFR = "9fefe0b7-a0d5-4e12-a8ed-3472cccdfc49"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 JETTest = "a79fb612-4a80-4749-a9bd-c2faab13da61"
