@@ -19,6 +19,13 @@ struct InfoState
     s::Vector{Float64}
 end
 
+struct DebugInfoState
+    σ::Vector{Float64}
+    r::Vector{Float64}
+    s::Vector{Float64}
+    hist::Vector{Vector{Float64}}
+end
+
 struct Kuhn # move explored,I to some solver type
     explored::Vector{Hist}
     I::Dict{KuhnInfoKey, InfoState} # [player, player_card, action_hist]
@@ -93,7 +100,7 @@ end
 
 # probably want to memoize or something
 function next_hist(h, a::Int)
-    return Hist(h.cards, push!(copy(h.action_hist),a))
+    return Hist(h.cards, [h.action_hist;a])
 end
 
 """
@@ -110,10 +117,14 @@ function infoset(game, h)
     if h ∈ game.explored # if h stored, return corresponding infoset pointer
         return game.I[k]
     else
-        I = InfoState(length(actions(h)))
         push!(game.explored, h)
-        game.I[k] = I
-        return I
+        if haskey(game.I, k)
+            return game.I[k]
+        else
+            I = InfoState(length(actions(h)))
+            game.I[k] = I
+            return I
+        end
     end
 end
 
