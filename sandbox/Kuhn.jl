@@ -19,7 +19,7 @@ struct InfoState
     s::Vector{Float64}
 end
 
-struct Kuhn
+struct Kuhn # move explored,I to some solver type
     explored::Vector{Hist}
     I::Dict{KuhnInfoKey, InfoState} # [player, player_card, action_hist]
 end
@@ -30,7 +30,7 @@ Kuhn() = Kuhn(Vector{Int}[], Dict{KuhnInfoKey, InfoState}())
 initialhist(::Kuhn) = Hist([0,0], Int[])
 
 function InfoState(L::Int)
-    return InfoState( # need length
+    return InfoState(
         fill(1/L, L),
         zeros(L),
         zeros(Float64,L)
@@ -87,7 +87,7 @@ function chance_action(h) # FIXME This is horiffically inefficient
     return randperm(3)[1:2]
 end
 
-function next_hist(h, a::Vector{Int}) # TODO : remove Int[] gc
+function next_hist(h, a::Vector{Int}) # TODO : remove Int[] gc (replace with NullVec)
     return Hist(a,Int[])
 end
 

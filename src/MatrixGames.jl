@@ -146,14 +146,14 @@ function cumulative_strategies(p::MatrixPlayer)
     return mat
 end
 
-function Plots.plot(p1::MatrixPlayer, p2::MatrixPlayer)
+function Plots.plot(p1::MatrixPlayer, p2::MatrixPlayer; kwargs...)
     L = length(p1.strategy)
     labels = Matrix{String}(undef, 1, L)
-    for i in eachindex(labels); labels[i] = L"a_%$(i)"; end
+    for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
 
-    plt1 = Plots.plot(cumulative_strategies(p1), labels=labels)
+    plt1 = Plots.plot(cumulative_strategies(p1), labels=labels; kwargs...)
 
-    plt2 = Plots.plot(cumulative_strategies(p2), labels="")
+    plt2 = Plots.plot(cumulative_strategies(p2), labels=""; kwargs...)
 
     title!(plt1, "Player 1")
     ylabel!(plt1, "Strategy Action Proportion")
@@ -162,12 +162,12 @@ function Plots.plot(p1::MatrixPlayer, p2::MatrixPlayer)
     xlabel!("Training Steps")
 end
 
-function Plots.plot(p::MatrixPlayer)
+function Plots.plot(p::MatrixPlayer; kwargs...)
     L = length(p.strategy)
     labels = Matrix{String}(undef, 1, L)
-    for i in eachindex(labels); labels[i] = L"a_%$(i)"; end
+    for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
 
-    plt = Plots.plot(cumulative_strategies(p), labels=labels)
+    plt = Plots.plot(cumulative_strategies(p), labels=labels; kwargs...)
 
     title!(plt, "Player 1")
     ylabel!(plt, "Strategy Action Proportion")

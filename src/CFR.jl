@@ -185,7 +185,7 @@ function update_strategy!(game::SimpleIOGame, I::InfoState, p1::SimpleIOPlayer, 
             σ[a] = 0.0
         end
     end
-    norm_sum === 0 ? fill!(σ,1/3) : σ ./= norm_sum
+    norm_sum === 0.0 ? fill!(σ,1/3) : σ ./= norm_sum
 
     σ1′ = Vector{Float64}(undef, length(σ))
     copyto!(σ1′, σ)
@@ -214,7 +214,7 @@ function update_strategies!(game::SimpleIOGame, Is::NTuple{2,InfoState}, p1::Sim
         end
     end
 
-    norm_sum === 0 ? fill!(σ1,1/3) : σ1 ./= norm_sum
+    norm_sum === 0.0 ? fill!(σ1,1/3) : σ1 ./= norm_sum
 
     σ2 = p2.strategy
     ra2 = p2.regret_avg
@@ -230,7 +230,7 @@ function update_strategies!(game::SimpleIOGame, Is::NTuple{2,InfoState}, p1::Sim
             σ2[a] = 0.0
         end
     end
-    norm_sum === 0 ? fill!(σ2,1/3) : σ2 ./= norm_sum
+    norm_sum === 0.0 ? fill!(σ2,1/3) : σ2 ./= norm_sum
 
     σ1′ = Vector{Float64}(undef, length(σ1))
     copyto!(σ1′, σ1)
@@ -288,14 +288,14 @@ function finalize_strategy!(p::SimpleIOPlayer) # `sum` causes gc
     σ ./= sum(σ)
 end
 
-function Plots.plot(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
+function Plots.plot(p1::SimpleIOPlayer, p2::SimpleIOPlayer; kwargs...)
     L = length(p1.strategy)
     labels = Matrix{String}(undef, 1, L)
-    for i in eachindex(labels); labels[i] = L"a_%$(i)"; end
+    for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
 
-    plt1 = Plots.plot(cumulative_strategies(p1), labels=labels)
+    plt1 = Plots.plot(cumulative_strategies(p1), labels=labels; kwargs...)
 
-    plt2 = Plots.plot(cumulative_strategies(p2), labels="")
+    plt2 = Plots.plot(cumulative_strategies(p2), labels=""; kwargs...)
 
     title!(plt1, "Player 1")
     ylabel!(plt1, "Strategy Action Proportion")
@@ -304,12 +304,12 @@ function Plots.plot(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
     xlabel!("Training Steps")
 end
 
-function Plots.plot(p::SimpleIOPlayer)
+function Plots.plot(p::SimpleIOPlayer; kwargs...)
     L = length(p.strategy)
     labels = Matrix{String}(undef, 1, L)
-    for i in eachindex(labels); labels[i] = L"a_%$(i)"; end
+    for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
 
-    plt = Plots.plot(cumulative_strategies(p), labels=labels)
+    plt = Plots.plot(cumulative_strategies(p), labels=labels; kwargs...)
 
     title!(plt, "Player 1")
     ylabel!(plt, "Strategy Action Proportion")
