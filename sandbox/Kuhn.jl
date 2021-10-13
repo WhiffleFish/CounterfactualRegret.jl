@@ -84,5 +84,4 @@ function infokey(g::Kuhn, h::Hist)
     return (p, card, h.action_hist) # [player, player_card, action_hist]
 end
 
-actions(::Kuhn, I::InfoState) = PASS:BET
 actions(::Kuhn, h::Hist) = PASS:BET

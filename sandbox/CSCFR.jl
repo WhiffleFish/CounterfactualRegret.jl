@@ -79,7 +79,8 @@ function CFR(trainer::Trainer, h, i, t, π_1, π_2)
         return CFR(trainer, h′, i, t, π_1, π_2)
     end
     I = infoset(trainer, h)
-    A = actions(game ,I)
+    # change to `actions(game, h)` to remove dependency on BOTH this and `actions(game,I)`
+    A = actions(game, h)
 
     v_σ = 0.0
     v_σ_Ia = zeros(Float64, length(A))
@@ -87,9 +88,9 @@ function CFR(trainer::Trainer, h, i, t, π_1, π_2)
     for (k,a) in enumerate(A)
         h′ = next_hist(game, h,a)
         if player(game, h) === 1
-            v_σ_Ia[k] = CFR(trainer, h′, i, t, I.σ[i]*π_1, π_2)
+            v_σ_Ia[k] = CFR(trainer, h′, i, t, I.σ[k]*π_1, π_2)
         else
-            v_σ_Ia[k] = CFR(trainer, h′, i, t, π_1, I.σ[i]*π_2)
+            v_σ_Ia[k] = CFR(trainer, h′, i, t, π_1, I.σ[k]*π_2)
         end
         v_σ += I.σ[k]*v_σ_Ia[k]
     end
@@ -101,7 +102,6 @@ function CFR(trainer::Trainer, h, i, t, π_1, π_2)
             I.r[k] += π_ni*(v_σ_Ia[k] - v_σ)
             I.s[k] += π_i*I.σ[k]
         end
-        regret_match!(I)
     end
 
     return v_σ
@@ -111,6 +111,9 @@ function train!(trainer::Trainer, N::Int)
     for _ in 1:N
         for i in 1:2
             CFR(trainer, initialhist(game), i, 0.0, 1.0, 1.0)
+        end
+        for I in values(trainer.I)
+            regret_match!(I)
         end
     end
 end
