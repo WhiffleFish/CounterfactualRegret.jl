@@ -1,11 +1,15 @@
-include(joinpath(@__DIR__, "..", "sandbox", "Kuhn.jl"))
 include(joinpath(@__DIR__, "..", "sandbox", "CSCFR.jl"))
+include(joinpath(@__DIR__, "..", "sandbox", "Kuhn.jl"))
 
 game = Kuhn()
-train!(game, 10_000)
+trainer = Trainer(game)
 
-@profiler train!(game, 100_000) recur=:flat
+train!(trainer, 100_000)
 
-@benchmark train!(game, 10_000)
+@profiler train!(trainer, 100_000) recur=:flat
 
-game.I
+trainer.I
+
+using BenchmarkTools
+
+@benchmark train!(trainer, 1_000)

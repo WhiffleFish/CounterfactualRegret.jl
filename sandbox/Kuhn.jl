@@ -13,40 +13,12 @@ Base.:(==)(h1::Hist, h2::Hist) = h1.cards==h2.cards && h1.action_hist==h2.action
 
 Base.length(h::Hist) = length(h.action_hist)
 
-struct InfoState
-    σ::Vector{Float64}
-    r::Vector{Float64}
-    s::Vector{Float64}
-end
-
-struct DebugInfoState
-    σ::Vector{Float64}
-    r::Vector{Float64}
-    s::Vector{Float64}
-    hist::Vector{Vector{Float64}}
-end
-
-struct Kuhn # move explored,I to some solver type
-    explored::Vector{Hist}
-    I::Dict{KuhnInfoKey, InfoState} # [player, player_card, action_hist]
-end
-
-Kuhn() = Kuhn(Vector{Int}[], Dict{KuhnInfoKey, InfoState}())
+struct Kuhn <: Game{Hist, KuhnInfoKey} end
 
 # FIXME: lots of gc
 initialhist(::Kuhn) = Hist([0,0], Int[])
 
-function InfoState(L::Int)
-    return InfoState(
-        fill(1/L, L),
-        zeros(L),
-        zeros(Float64,L)
-    )
-end
-
-@inline other_player(i) = 3-i
-
-function isterminal(h) # requires some sequence of actions
+function isterminal(::Kuhn, h::Hist) # requires some sequence of actions
     h = h.action_hist
     L = length(h)
     if L > 1
@@ -60,7 +32,7 @@ function isterminal(h) # requires some sequence of actions
     end
 end
 
-function u(i,h)
+function u(::Kuhn, i::Int, h::Hist)
     as = h.action_hist
     cards = h.cards
     L = length(as)
@@ -82,7 +54,7 @@ function u(i,h)
     end
 end
 
-function player(h)
+function player(::Kuhn, h::Hist)
     if any(iszero, h.cards)
         return 0
     else
@@ -90,58 +62,27 @@ function player(h)
     end
 end
 
-function chance_action(h) # FIXME This is horiffically inefficient
+function chance_action(::Kuhn, h::Hist) # FIXME This is horiffically inefficient
     return randperm(3)[1:2]
 end
 
-function next_hist(h, a::Vector{Int}) # TODO : remove Int[] gc (replace with NullVec)
+function next_hist(::Kuhn, h, a::Vector{Int}) # TODO : remove Int[] gc (replace with NullVec)
     return Hist(a,Int[])
 end
 
 # probably want to memoize or something
-function next_hist(h, a::Int)
+function next_hist(::Kuhn, h::Hist, a::Int)
     return Hist(h.cards, [h.action_hist;a])
 end
 
 """
 Map history to key unique to all histories in one info set
 """
-function infokey(h)
-    p = player(h)
+function infokey(g::Kuhn, h::Hist)
+    p = player(g,h)
     card = p > 0 ? h.cards[p] : 0
     return (p, card, h.action_hist) # [player, player_card, action_hist]
 end
 
-function infoset(game, h)
-    k = infokey(h)
-    if h ∈ game.explored # if h stored, return corresponding infoset pointer
-        return game.I[k]
-    else
-        push!(game.explored, h)
-        if haskey(game.I, k)
-            return game.I[k]
-        else
-            I = InfoState(length(actions(h)))
-            game.I[k] = I
-            return I
-        end
-    end
-end
-
-actions(I::InfoState) = PASS:BET
-actions(h::Hist) = PASS:BET
-
-function regret_match!(I)
-    s = 0.0
-    σ = I.σ
-    for (i,r_i) in enumerate(I.r)
-        if r_i > 0
-            s += r_i
-            σ[i] = r_i
-        else
-            σ[i] = 0.0
-        end
-    end
-
-    s > 0 ? (σ ./= s) : fill!(σ,1/length(σ))
-end
+actions(::Kuhn, I::InfoState) = PASS:BET
+actions(::Kuhn, h::Hist) = PASS:BET
