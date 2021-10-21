@@ -7,7 +7,7 @@ import Base.==
 include("TerminalCache.jl")
 
 const SimpleIOHist = AbstractVector{Int}
-const InfoState = Vector{Vector{Int}}
+const SimpleIOInfoState = Vector{Vector{Int}}
 
 struct NullVec <: AbstractVector{Int} end
 Base.size(::NullVec) = (0,)
@@ -125,7 +125,7 @@ function path_prob(σ::NTuple{2,Vector{Float64}}, h::AbstractVector{Int}, h′::
     end
 end
 
-function path_prob(σ::NTuple{2,Vector{Float64}}, I::InfoState, i::Int)
+function path_prob(σ::NTuple{2,Vector{Float64}}, I::SimpleIOInfoState, i::Int)
     s = 0.0
     for h in I
         s += path_prob(σ, i, h)
@@ -137,7 +137,7 @@ function u(game::SimpleIOGame, i::Int, h′::AbstractVector{Int})
     game.R[h′[1], h′[2]][i]
 end
 
-function u(game::SimpleIOGame, i::Int, I::InfoState, σ::NTuple{2,Vector{Float64}})
+function u(game::SimpleIOGame, i::Int, I::SimpleIOInfoState, σ::NTuple{2,Vector{Float64}})
     num = 0.0
     den = 0.0
     for h in I
@@ -150,7 +150,7 @@ function u(game::SimpleIOGame, i::Int, I::InfoState, σ::NTuple{2,Vector{Float64
     return num/den
 end
 
-function u(game::SimpleIOGame, i::Int, I::InfoState, a::Int, σ::NTuple{2,Vector{Float64}})
+function u(game::SimpleIOGame, i::Int, I::SimpleIOInfoState, a::Int, σ::NTuple{2,Vector{Float64}})
     num = 0.0
     den = 0.0
     for hk in I
@@ -166,11 +166,11 @@ function u(game::SimpleIOGame, i::Int, I::InfoState, a::Int, σ::NTuple{2,Vector
     return num/den
 end
 
-function sub_regret(game::SimpleIOGame,i::Int,I::InfoState,σ::NTuple{2, Vector{Float64}},a::Int)
+function sub_regret(game::SimpleIOGame,i::Int,I::SimpleIOInfoState,σ::NTuple{2, Vector{Float64}},a::Int)
     path_prob(σ, I, -i)*(u(game,i,I,a,σ) - u(game,i, I, σ))
 end
 
-function update_strategy!(game::SimpleIOGame, I::InfoState, p1::SimpleIOPlayer, p2::SimpleIOPlayer; pushp2::Bool=true)
+function update_strategy!(game::SimpleIOGame, I::SimpleIOInfoState, p1::SimpleIOPlayer, p2::SimpleIOPlayer; pushp2::Bool=true)
     σ = p1.strategy
     ra = p1.regret_avg
     T = length(p1.hist)
@@ -198,7 +198,7 @@ function update_strategy!(game::SimpleIOGame, I::InfoState, p1::SimpleIOPlayer, 
     return σ
 end
 
-function update_strategies!(game::SimpleIOGame, Is::NTuple{2,InfoState}, p1::SimpleIOPlayer, p2::SimpleIOPlayer)
+function update_strategies!(game::SimpleIOGame, Is::NTuple{2,SimpleIOInfoState}, p1::SimpleIOPlayer, p2::SimpleIOPlayer)
     σ1 = p1.strategy
     ra1 = p1.regret_avg
     T1 = length(p1.hist)

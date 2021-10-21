@@ -4,6 +4,22 @@ Chance Sampling Counterfactual Regret Minimization
 
 abstract type Game{H,K} end
 
+function initialhist end
+
+function isterminal end
+
+function u end
+
+function player end
+
+function chance_action end
+
+function next_hist end
+
+function infokey end
+
+function actions end
+
 struct InfoState
     σ::Vector{Float64}
     r::Vector{Float64}
@@ -110,7 +126,7 @@ end
 function train!(trainer::Trainer, N::Int)
     for _ in 1:N
         for i in 1:2
-            CFR(trainer, initialhist(game), i, 0.0, 1.0, 1.0)
+            CFR(trainer, initialhist(trainer.game), i, 0.0, 1.0, 1.0)
         end
         for I in values(trainer.I)
             regret_match!(I)

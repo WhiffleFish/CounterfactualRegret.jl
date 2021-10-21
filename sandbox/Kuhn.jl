@@ -16,9 +16,9 @@ Base.length(h::Hist) = length(h.action_hist)
 struct Kuhn <: Game{Hist, KuhnInfoKey} end
 
 # FIXME: lots of gc
-initialhist(::Kuhn) = Hist([0,0], Int[])
+HelloCFR.initialhist(::Kuhn) = Hist([0,0], Int[])
 
-function isterminal(::Kuhn, h::Hist) # requires some sequence of actions
+function HelloCFR.isterminal(::Kuhn, h::Hist) # requires some sequence of actions
     h = h.action_hist
     L = length(h)
     if L > 1
@@ -32,7 +32,7 @@ function isterminal(::Kuhn, h::Hist) # requires some sequence of actions
     end
 end
 
-function u(::Kuhn, i::Int, h::Hist)
+function HelloCFR.u(::Kuhn, i::Int, h::Hist)
     as = h.action_hist
     cards = h.cards
     L = length(as)
@@ -54,7 +54,7 @@ function u(::Kuhn, i::Int, h::Hist)
     end
 end
 
-function player(::Kuhn, h::Hist)
+function HelloCFR.player(::Kuhn, h::Hist)
     if any(iszero, h.cards)
         return 0
     else
@@ -62,26 +62,26 @@ function player(::Kuhn, h::Hist)
     end
 end
 
-function chance_action(::Kuhn, h::Hist) # FIXME This is horiffically inefficient
+function HelloCFR.chance_action(::Kuhn, h::Hist) # FIXME This is horiffically inefficient
     return randperm(3)[1:2]
 end
 
-function next_hist(::Kuhn, h, a::Vector{Int}) # TODO : remove Int[] gc (replace with NullVec)
+function HelloCFR.next_hist(::Kuhn, h, a::Vector{Int}) # TODO : remove Int[] gc (replace with NullVec)
     return Hist(a,Int[])
 end
 
 # probably want to memoize or something
-function next_hist(::Kuhn, h::Hist, a::Int)
+function HelloCFR.next_hist(::Kuhn, h::Hist, a::Int)
     return Hist(h.cards, [h.action_hist;a])
 end
 
 """
 Map history to key unique to all histories in one info set
 """
-function infokey(g::Kuhn, h::Hist)
+function HelloCFR.infokey(g::Kuhn, h::Hist)
     p = player(g,h)
     card = p > 0 ? h.cards[p] : 0
     return (p, card, h.action_hist) # [player, player_card, action_hist]
 end
 
-actions(::Kuhn, h::Hist) = PASS:BET
+HelloCFR.actions(::Kuhn, h::Hist) = PASS:BET
