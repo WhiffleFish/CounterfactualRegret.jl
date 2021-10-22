@@ -295,11 +295,14 @@ function evaluate(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
     σ2 = p2.strategy
     R = game.R
     s1,s2 = size(R)
-    eval = [0.0,0.0]
+    p1_eval = 0.0
+    p2_eval = 0.0
     for i in 1:s1, j in 1:s2
-        eval .+= σ1[i]*σ2[j]*R[i,j]
+        prob = σ1[i]*σ2[j]
+        p1_eval += prob*R[i,j][1]
+        p2_eval += prob*R[i,j][2]
     end
-    return tuple(eval...)
+    return p1_eval, p2_eval
 end
 
 function Plots.plot(p1::SimpleIOPlayer, p2::SimpleIOPlayer; kwargs...)
