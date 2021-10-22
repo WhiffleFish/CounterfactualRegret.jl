@@ -110,6 +110,23 @@ function finalize_strategy!(p::MatrixPlayer)
     σ ./= sum(σ)
 end
 
+function evaluate(p1::MatrixPlayer, p2::MatrixPlayer)
+    # strategies assumed already finalized
+    game = p1.game
+    σ1 = p1.strategy
+    σ2 = p2.strategy
+    R = game.R
+    s1,s2 = size(R)
+    p1_eval = 0.0
+    p2_eval = 0.0
+    for i in 1:s1, j in 1:s2
+        prob = σ1[i]*σ2[j]
+        p1_eval += prob*R[i,j][1]
+        p2_eval += prob*R[i,j][2]
+    end
+    return p1_eval, p2_eval
+end
+
 function train_both!(p1::MatrixPlayer, p2::MatrixPlayer, N::Int)
     for i in 1:N
         a1, a2 = gen_action(p1), gen_action(p2)

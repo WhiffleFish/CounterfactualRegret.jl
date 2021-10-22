@@ -116,11 +116,18 @@ function CFR(trainer::Trainer, h, i, t, π_1, π_2)
         π_ni = i === 1 ? π_2 : π_1
         for (k,a) in enumerate(A)
             I.r[k] += π_ni*(v_σ_Ia[k] - v_σ)
-            I.s[k] += π_i*I.σ[k]
+            I.s[k] += π_i*I.σ[k] # why weighted by π_i? Isn't this just a weight sum?
         end
     end
 
     return v_σ
+end
+
+function finalize_strategies!(trainer::Trainer)
+    for I in values(trainer.I)
+        I.σ .= I.s
+        I.σ ./= sum(I.σ)
+    end
 end
 
 function train!(trainer::Trainer, N::Int)
@@ -132,4 +139,54 @@ function train!(trainer::Trainer, N::Int)
             regret_match!(I)
         end
     end
+end
+
+"""
+Monte Carlo evaluation sampling chance player actions
+"""
+function evaluate(trainer::Trainer, N::Int)
+    finalize_strategies!(trainer)
+
+    p1_eval = 0.0
+    p2_eval = 0.0
+
+    ih = initialhist(trainer.game)
+    for _ in 1:N
+        p1_eval += evaluate(trainer, ih, 1, 0, 1.0, 1.0)
+        p2_eval += evaluate(trainer, ih, 2, 0, 1.0, 1.0)
+    end
+
+    p1_eval /= N
+    p2_eval /= N
+
+    return (p1_eval, p2_eval)
+end
+
+function evaluate(trainer::Trainer, h, i, t, π_1, π_2)
+    game = trainer.game
+    if isterminal(game, h)
+        return u(game, i, h)
+    elseif player(game, h) === 0 # chance player
+        a = chance_action(game, h)
+        h′ = next_hist(game,h,a)
+        return evaluate(trainer, h′, i, t, π_1, π_2)
+    end
+
+    I = infoset(trainer, h)
+    A = actions(game, h)
+
+    v_σ = 0.0
+
+    for (k,a) in enumerate(A)
+        v_σ_Ia = 0.0
+        h′ = next_hist(game, h,a)
+        if player(game, h) === 1
+            v_σ_Ia = evaluate(trainer, h′, i, t, I.σ[k]*π_1, π_2)
+        else
+            v_σ_Ia = evaluate(trainer, h′, i, t, π_1, I.σ[k]*π_2)
+        end
+        v_σ += I.σ[k]*v_σ_Ia
+    end
+
+    return v_σ
 end

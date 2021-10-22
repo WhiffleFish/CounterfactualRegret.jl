@@ -17,6 +17,8 @@ plot(p1,p2)
 mat_σ1 = p1.strategy
 mat_σ2 = p2.strategy
 
+evaluate(p1,p2)
+
 include(joinpath(@__DIR__, "RPS.jl"))
 
 game = RPS(mat_game.R)
@@ -24,6 +26,9 @@ game = RPS(mat_game.R)
 trainer = Trainer(game)
 
 train!(trainer, 100_000)
+
+e1,e2 = evaluate(trainer,100)
+trainer.I
 
 extensive_σ1,extensive_σ2 = deepcopy(trainer.I[0].s), deepcopy(trainer.I[1].s)
 extensive_σ1 ./= sum(extensive_σ1)
@@ -59,8 +64,8 @@ trainer = Trainer(game)
 
 train!(trainer, 100_000)
 
+evaluate(trainer, 1_000_000)
+
+evaluate(trainer, 1_000_000)
+
 print(trainer)
-
-g = reduce(hcat,HelloCFR.chance_action(game, initialhist(game)) for _ in 1:1000)
-
-histogram(g', color=["red" "blue"], alpha=0.5)

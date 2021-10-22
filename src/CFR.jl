@@ -288,6 +288,20 @@ function finalize_strategy!(p::SimpleIOPlayer) # `sum` causes gc
     σ ./= sum(σ)
 end
 
+function evaluate(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
+    # strategies assumed already finalized
+    game = p1.game
+    σ1 = p1.strategy
+    σ2 = p2.strategy
+    R = game.R
+    s1,s2 = size(R)
+    eval = [0.0,0.0]
+    for i in 1:s1, j in 1:s2
+        eval .+= σ1[i]*σ2[j]*R[i,j]
+    end
+    return tuple(eval...)
+end
+
 function Plots.plot(p1::SimpleIOPlayer, p2::SimpleIOPlayer; kwargs...)
     L = length(p1.strategy)
     labels = Matrix{String}(undef, 1, L)
