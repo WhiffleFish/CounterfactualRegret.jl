@@ -6,21 +6,38 @@ using PushVectors
 import Base.==
 include("TerminalCache.jl")
 
-const SimpleIOHist = AbstractVector{Int}
-const SimpleIOInfoState = Vector{Vector{Int}}
+const SimpleIIHist = AbstractVector{Int}
+const SimpleIIInfoState = Vector{Vector{Int}}
 
 struct NullVec <: AbstractVector{Int} end
 Base.size(::NullVec) = (0,)
 Base.length(::NullVec) = 0
 
-struct SimpleIOGame{T}
+"""
+Simple Imperfect Information Game
+- Formulation of a matrix game as in imperfect information extensive form game
+- Solved with CFR
+- Takes reward matrix as input
+
+    `SimpleIIGame(R::Matrix{NTuple{2,T}})`
+
+## Example
+```
+RPS = SimpleIIGame([
+    (0,0) (-1,1) (1,-1);
+    (1,-1) (0,0) (-1,1);
+    (-1,1) (1,-1) (0,0)
+])
+```
+"""
+struct SimpleIIGame{T}
     R::Matrix{NTuple{2,T}}
     terminals::Matrix{Vector{Int}}
     _terminal_cache::TerminalCache
     _util_cache::PushVector{Int, Vector{Int}}
 end
 
-function SimpleInfoState(g::SimpleIOGame, i::Int)
+function SimpleInfoState(g::SimpleIIGame, i::Int)
     if i === 1
         return [Int[]]
     else
@@ -28,24 +45,36 @@ function SimpleInfoState(g::SimpleIOGame, i::Int)
     end
 end
 
-function SimpleIOGame(R::Matrix{NTuple{2,T}}) where T
+function SimpleIIGame(R::Matrix{NTuple{2,T}}) where T
     s = size(R)
     terminals = [[i,j] for i in 1:s[1], j in 1:s[2]]
-    return SimpleIOGame(R,terminals, TerminalCache(terminals), PushVector{Int}(2))
+    return SimpleIIGame(R,terminals, TerminalCache(terminals), PushVector{Int}(2))
 end
 
-struct SimpleIOPlayer{T}
+"""
+Simple Imperfect Information Game Player
+
+Instantiate with `SimpleIIPlayer(game, id[, initial_strategy])`
+Default to uniform strategy
+
+## Example
+```
+init_strategy = [0.1,0.3,0.6]
+player1 = SimpleIIPlayer(game, 1, init_strategy)
+```
+"""
+struct SimpleIIPlayer{T}
     id::Int
-    game::SimpleIOGame{T}
+    game::SimpleIIGame{T}
     strategy::Vector{Float64}
     hist::Vector{Vector{Float64}}
-    regret_avg::Vector{Float64} # N inferrable by `length(hist)-1`
+    regret_avg::Vector{Float64}
 end
 
-function SimpleIOPlayer(game::SimpleIOGame, id::Int)
+function SimpleIIPlayer(game::SimpleIIGame, id::Int)
     n_actions = size(game.R, id)
     strategy = fill(1/n_actions, n_actions)
-    SimpleIOPlayer(
+    SimpleIIPlayer(
         id,
         game,
         strategy,
@@ -54,10 +83,10 @@ function SimpleIOPlayer(game::SimpleIOGame, id::Int)
     )
 end
 
-function SimpleIOPlayer(game::SimpleIOGame, id::Int, strategy::Vector{Float64})
+function SimpleIIPlayer(game::SimpleIIGame, id::Int, strategy::Vector{Float64})
     n_actions = size(game.R, id)
     @assert size(game.R, id) == length(strategy)
-    SimpleIOPlayer(
+    SimpleIIPlayer(
         id,
         game,
         strategy,
@@ -66,17 +95,17 @@ function SimpleIOPlayer(game::SimpleIOGame, id::Int, strategy::Vector{Float64})
     )
 end
 
-function clear!(p::SimpleIOPlayer)
+function clear!(p::SimpleIIPlayer)
     resize!(p.hist, 1)
     p.hist[1] .= p.strategy
     p.regret_avg .= 0.0
 end
 
-function terminals(game::SimpleIOGame, h::AbstractVector{Int})
+function terminals(game::SimpleIIGame, h::AbstractVector{Int})
     return game._terminal_cache[h]
 end
 
-player(::SimpleIOGame, h::AbstractVector{Int}) = length(h) < 1 ? 1 : 2
+player(::SimpleIIGame, h::AbstractVector{Int}) = length(h) < 1 ? 1 : 2
 player(h) = length(h) < 1 ? 1 : 2
 
 
@@ -125,7 +154,7 @@ function path_prob(σ::NTuple{2,Vector{Float64}}, h::AbstractVector{Int}, h′::
     end
 end
 
-function path_prob(σ::NTuple{2,Vector{Float64}}, I::SimpleIOInfoState, i::Int)
+function path_prob(σ::NTuple{2,Vector{Float64}}, I::SimpleIIInfoState, i::Int)
     s = 0.0
     for h in I
         s += path_prob(σ, i, h)
@@ -133,11 +162,11 @@ function path_prob(σ::NTuple{2,Vector{Float64}}, I::SimpleIOInfoState, i::Int)
     return s
 end
 
-function u(game::SimpleIOGame, i::Int, h′::AbstractVector{Int})
+function u(game::SimpleIIGame, i::Int, h′::AbstractVector{Int})
     game.R[h′[1], h′[2]][i]
 end
 
-function u(game::SimpleIOGame, i::Int, I::SimpleIOInfoState, σ::NTuple{2,Vector{Float64}})
+function u(game::SimpleIIGame, i::Int, I::SimpleIIInfoState, σ::NTuple{2,Vector{Float64}})
     num = 0.0
     den = 0.0
     for h in I
@@ -150,7 +179,7 @@ function u(game::SimpleIOGame, i::Int, I::SimpleIOInfoState, σ::NTuple{2,Vector
     return num/den
 end
 
-function u(game::SimpleIOGame, i::Int, I::SimpleIOInfoState, a::Int, σ::NTuple{2,Vector{Float64}})
+function u(game::SimpleIIGame, i::Int, I::SimpleIIInfoState, a::Int, σ::NTuple{2,Vector{Float64}})
     num = 0.0
     den = 0.0
     for hk in I
@@ -166,11 +195,11 @@ function u(game::SimpleIOGame, i::Int, I::SimpleIOInfoState, a::Int, σ::NTuple{
     return num/den
 end
 
-function sub_regret(game::SimpleIOGame,i::Int,I::SimpleIOInfoState,σ::NTuple{2, Vector{Float64}},a::Int)
+function sub_regret(game::SimpleIIGame,i::Int,I::SimpleIIInfoState,σ::NTuple{2, Vector{Float64}},a::Int)
     path_prob(σ, I, -i)*(u(game,i,I,a,σ) - u(game,i, I, σ))
 end
 
-function update_strategy!(game::SimpleIOGame, I::SimpleIOInfoState, p1::SimpleIOPlayer, p2::SimpleIOPlayer; pushp2::Bool=true)
+function update_strategy!(game::SimpleIIGame, I::SimpleIIInfoState, p1::SimpleIIPlayer, p2::SimpleIIPlayer; pushp2::Bool=true)
     σ = p1.strategy
     ra = p1.regret_avg
     T = length(p1.hist)
@@ -198,7 +227,7 @@ function update_strategy!(game::SimpleIOGame, I::SimpleIOInfoState, p1::SimpleIO
     return σ
 end
 
-function update_strategies!(game::SimpleIOGame, Is::NTuple{2,SimpleIOInfoState}, p1::SimpleIOPlayer, p2::SimpleIOPlayer)
+function update_strategies!(game::SimpleIIGame, Is::NTuple{2,SimpleIIInfoState}, p1::SimpleIIPlayer, p2::SimpleIIPlayer)
     σ1 = p1.strategy
     ra1 = p1.regret_avg
     T1 = length(p1.hist)
@@ -241,7 +270,7 @@ function update_strategies!(game::SimpleIOGame, Is::NTuple{2,SimpleIOInfoState},
     return σ1, σ2
 end
 
-function train_both!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int; progress::Bool=false)
+function train_both!(p1::SimpleIIPlayer, p2::SimpleIIPlayer, N::Int; progress::Bool=false)
     game = p1.game
     I1 = SimpleInfoState(game, 1)
     I2 = SimpleInfoState(game, 2)
@@ -256,7 +285,7 @@ function train_both!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int; progress::B
     return p1, p2
 end
 
-function train_one!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int; progress::Bool=false)
+function train_one!(p1::SimpleIIPlayer, p2::SimpleIIPlayer, N::Int; progress::Bool=false)
     I = SimpleInfoState(p1.game, 1)
     @showprogress enabled=!progress for i in 1:N
         update_strategy!(p1.game, I, p1, p2)
@@ -265,7 +294,7 @@ function train_one!(p1::SimpleIOPlayer, p2::SimpleIOPlayer, N::Int; progress::Bo
     return p1
 end
 
-function cumulative_strategies(p::SimpleIOPlayer)
+function cumulative_strategies(p::SimpleIIPlayer)
     mat = Matrix{Float64}(undef, length(p.hist), length(p.strategy))
     σ = zeros(Float64, length(p.strategy))
 
@@ -276,11 +305,11 @@ function cumulative_strategies(p::SimpleIOPlayer)
     return mat
 end
 
-function avg_strat(p::SimpleIOPlayer)
+function avg_strat(p::SimpleIIPlayer)
     return sum(p.hist)/length(p.hist)
 end
 
-function finalize_strategy!(p::SimpleIOPlayer) # `sum` causes gc
+function finalize_strategy!(p::SimpleIIPlayer) # `sum` causes gc
     σ = p.strategy .= 0.0
     for σ_i in p.hist
         σ .+= σ_i
@@ -288,7 +317,7 @@ function finalize_strategy!(p::SimpleIOPlayer) # `sum` causes gc
     σ ./= sum(σ)
 end
 
-function evaluate(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
+function evaluate(p1::SimpleIIPlayer, p2::SimpleIIPlayer)
     # strategies assumed already finalized
     game = p1.game
     σ1 = p1.strategy
@@ -305,7 +334,7 @@ function evaluate(p1::SimpleIOPlayer, p2::SimpleIOPlayer)
     return p1_eval, p2_eval
 end
 
-function Plots.plot(p1::SimpleIOPlayer, p2::SimpleIOPlayer; kwargs...)
+function Plots.plot(p1::SimpleIIPlayer, p2::SimpleIIPlayer; kwargs...)
     L = length(p1.strategy)
     labels = Matrix{String}(undef, 1, L)
     for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
@@ -321,7 +350,7 @@ function Plots.plot(p1::SimpleIOPlayer, p2::SimpleIOPlayer; kwargs...)
     xlabel!("Training Steps")
 end
 
-function Plots.plot(p::SimpleIOPlayer; kwargs...)
+function Plots.plot(p::SimpleIIPlayer; kwargs...)
     L = length(p.strategy)
     labels = Matrix{String}(undef, 1, L)
     for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end

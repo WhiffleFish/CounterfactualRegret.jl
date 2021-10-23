@@ -5,7 +5,7 @@ export MatrixGame, MatrixPlayer, clear!, train_both!, train_one!
 export evaluate
 
 include("CFR.jl")
-export SimpleIOGame, SimpleIOPlayer, SimpleInfoState
+export SimpleIIGame, SimpleIIPlayer
 
 include("CSCFR.jl")
 export Game, Trainer, train!, other_player

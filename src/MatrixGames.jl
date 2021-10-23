@@ -3,10 +3,79 @@ using Plots
 using LaTeXStrings
 import Plots.plot
 # restricted to 2-player game
+
+"""
+    `train_both!(player1, player2, N::Int)`
+
+Find Nash equilibrium by training two players against each other
+
+## Example
+```
+RPS = MatrixGame([
+    (0,0) (-1,1) (1,-1);
+    (1,-1) (0,0) (-1,1);
+    (-1,1) (1,-1) (0,0)
+])
+init_strategy = [0.1,0.3,0.6]
+player1 = MatrixPlayer(RPS, 1, copy(init_strategy))
+player2 = MatrixPlayer(RPS, 2, copy(init_strategy))
+train_both!(player1, player2, 1000)
+```
+"""
+function train_both! end
+
+"""
+    `train_one!(player1, player2, N::Int)`
+
+Train only player 1 while keeping strategy of player 2 constant.
+Yields strategy for player 1 that is maximally exploitative of player 2.
+
+```
+RPS = MatrixGame([
+    (0,0) (-1,1) (1,-1);
+    (1,-1) (0,0) (-1,1);
+    (-1,1) (1,-1) (0,0)
+])
+init_strategy = [0.1,0.3,0.6]
+player1 = MatrixPlayer(RPS, 1, copy(init_strategy))
+player2 = MatrixPlayer(RPS, 2, copy(init_strategy))
+train_one!(player1, player2, 1000)
+```
+"""
+function train_one! end
+
+"""
+Matrix Game
+- Solved with regret matching
+- Takes reward matrix as input
+
+    `MatrixGame(R::Matrix{NTuple{2,T}})`
+
+## Example
+```
+RPS = MatrixGame([
+    (0,0) (-1,1) (1,-1);
+    (1,-1) (0,0) (-1,1);
+    (-1,1) (1,-1) (0,0)
+])
+```
+"""
 struct MatrixGame{T}
     R::Matrix{NTuple{2,T}}
 end
 
+"""
+Matrix Game Player
+
+Instantiate with `MatrixPlayer(game, id[, initial_strategy])`
+Default to uniform strategy
+
+## Example
+```
+init_strategy = [0.1,0.3,0.6]
+player1 = MatrixPlayer(game, 1, init_strategy)
+```
+"""
 struct MatrixPlayer{T}
     id::Int
     game::MatrixGame{T}
@@ -18,10 +87,11 @@ end
 
 function MatrixPlayer(game::MatrixGame, id::Int)
     n_actions = size(game.R, id)
+    strategy = fill(1/n_actions, n_actions)
     MatrixPlayer(
         id,
         game,
-        fill(1/n_actions, n_actions),
+        strategy,
         [deepcopy(strategy)],
         zeros(n_actions),
         deepcopy(strategy)
