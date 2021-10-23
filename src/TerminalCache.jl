@@ -6,7 +6,7 @@ end
 
 function TerminalCache(term::Matrix{Vector{Int}})
     v1 = vec(term)
-    v2 = [term[i,:] for i in 1:size(term,2)]
+    v2 = [term[i,:] for i in 1:size(term,1)]
     v3 = [[0,0]]
 
     return TerminalCache(v1,v2,v3)

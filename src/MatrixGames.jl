@@ -37,6 +37,7 @@ end
 
 function MatrixPlayer(game::MatrixGame, id::Int, strategy::Vector{Float64})
     n_actions = size(game.R, id)
+    @assert length(strategy) == n_actions
     MatrixPlayer(
         id,
         game,
@@ -57,12 +58,12 @@ function regret(game::MatrixGame, i::Int, a1::Int, a2::Int)
     u = game.R[a1,a2][i]
     if i === 1
         return [
-            max(game.R[a,a2][i], 0)
+            game.R[a,a2][i] - u
             for a in 1:size(game.R, i)
             ]
     elseif i === 2
         return [
-            max(game.R[a1,a][i], 0)
+            game.R[a1,a][i] - u
             for a in 1:size(game.R, i)
             ]
     else
@@ -86,7 +87,7 @@ function fill_normed_regret!(v::Vector{Float64}, r::Vector)
         end
     end
     if s == 0
-        fill!(v, 1/3)
+        fill!(v, 1/length(v))
     else
         v ./= s
     end

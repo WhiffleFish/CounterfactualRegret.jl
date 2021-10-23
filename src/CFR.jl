@@ -185,7 +185,7 @@ function update_strategy!(game::SimpleIOGame, I::SimpleIOInfoState, p1::SimpleIO
             σ[a] = 0.0
         end
     end
-    norm_sum === 0.0 ? fill!(σ,1/3) : σ ./= norm_sum
+    norm_sum === 0.0 ? fill!(σ,1/length(σ)) : σ ./= norm_sum
 
     σ1′ = Vector{Float64}(undef, length(σ))
     copyto!(σ1′, σ)
@@ -214,7 +214,7 @@ function update_strategies!(game::SimpleIOGame, Is::NTuple{2,SimpleIOInfoState},
         end
     end
 
-    norm_sum === 0.0 ? fill!(σ1,1/3) : σ1 ./= norm_sum
+    norm_sum === 0.0 ? fill!(σ1,1/length(σ1)) : σ1 ./= norm_sum
 
     σ2 = p2.strategy
     ra2 = p2.regret_avg
@@ -230,7 +230,7 @@ function update_strategies!(game::SimpleIOGame, Is::NTuple{2,SimpleIOInfoState},
             σ2[a] = 0.0
         end
     end
-    norm_sum === 0.0 ? fill!(σ2,1/3) : σ2 ./= norm_sum
+    norm_sum === 0.0 ? fill!(σ2,1/length(σ2)) : σ2 ./= norm_sum
 
     σ1′ = Vector{Float64}(undef, length(σ1))
     copyto!(σ1′, σ1)
