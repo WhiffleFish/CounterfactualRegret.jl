@@ -25,4 +25,6 @@ HelloCFR.next_hist(::RPS, h, a) = [h;a]
 
 HelloCFR.infokey(::RPS, h) = length(h)
 
-HelloCFR.actions(::RPS, ::Any) = 1:3
+function HelloCFR.actions(game::RPS, h::RPSHist)
+    length(h) == 0 ? (1:size(game.R,1)) : (1:size(game.R,2))
+end
