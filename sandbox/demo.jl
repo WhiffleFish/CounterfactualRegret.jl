@@ -53,3 +53,32 @@ train!(trainer, 1_000)
 trainer
 
 actions(game, Int[2])
+##
+using HelloCFR
+include(joinpath(@__DIR__,"..","src","games","Kuhn.jl"))
+
+function print(trainer::Trainer)
+    println("\n\n")
+    for (k,v) in trainer.I
+        h = k[3]
+        h_n = string.(h)
+        while length(h_n) < 3
+            push!(h_n, "_")
+        end
+        σ = deepcopy(v.s)
+        σ ./= sum(σ)
+        σ = round.(σ, digits=3)
+        println("Player: $(k[1]) \t Card: $(k[2]) \t h: $(join(h_n)) \t σ: $σ")
+    end
+end
+
+
+game = Kuhn()
+trainer = Trainer(game)
+
+train!(trainer, 2)
+print(trainer)
+
+@profiler train!(trainer, 100_000) recur=:flat
+
+trainer.I

@@ -78,7 +78,7 @@ function SimpleIIPlayer(game::SimpleIIGame, id::Int)
         id,
         game,
         strategy,
-        [deepcopy(strategy)],
+        [copy(strategy)],
         zeros(n_actions),
     )
 end
@@ -89,8 +89,8 @@ function SimpleIIPlayer(game::SimpleIIGame, id::Int, strategy::Vector{Float64})
     SimpleIIPlayer(
         id,
         game,
-        strategy,
-        [deepcopy(strategy)],
+        copy(strategy),
+        [copy(strategy)],
         zeros(n_actions),
     )
 end
@@ -216,12 +216,10 @@ function update_strategy!(game::SimpleIIGame, I::SimpleIIInfoState, p1::SimpleII
     end
     norm_sum === 0.0 ? fill!(σ,1/length(σ)) : σ ./= norm_sum
 
-    σ1′ = Vector{Float64}(undef, length(σ))
-    copyto!(σ1′, σ)
+    σ1′ = copy(σ)
     push!(p1.hist, σ1′)
     if pushp2
-        σ2′ = Vector{Float64}(undef, length(p2.strategy))
-        copyto!(σ2′, p2.strategy)
+        σ2′ = copy(p2.strategy)
         push!(p2.hist, σ2′)
     end
     return σ
@@ -261,12 +259,8 @@ function update_strategies!(game::SimpleIIGame, Is::NTuple{2,SimpleIIInfoState},
     end
     norm_sum === 0.0 ? fill!(σ2,1/length(σ2)) : σ2 ./= norm_sum
 
-    σ1′ = Vector{Float64}(undef, length(σ1))
-    copyto!(σ1′, σ1)
-    push!(p1.hist, σ1′)
-    σ2′ = Vector{Float64}(undef, length(σ2))
-    copyto!(σ2′, σ2)
-    push!(p2.hist, σ2′)
+    push!(p1.hist, copy(σ1))
+    push!(p2.hist, copy(σ2))
     return σ1, σ2
 end
 

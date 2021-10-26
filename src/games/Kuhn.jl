@@ -1,11 +1,12 @@
 using Random
+using StaticArrays
 
 const PASS = 0
 const BET = 1
 const KuhnInfoKey = Tuple{Int, Int, Vector{Int}} # [player, player_card, action_hist]
 
 struct Hist
-    cards::Vector{Int}
+    cards::SVector{2,Int}
     action_hist::Vector{Int}
 end
 
@@ -16,7 +17,7 @@ Base.length(h::Hist) = length(h.action_hist)
 struct Kuhn <: Game{Hist, KuhnInfoKey} end
 
 # FIXME: lots of gc
-HelloCFR.initialhist(::Kuhn) = Hist([0,0], Int[])
+HelloCFR.initialhist(::Kuhn) = Hist(SA[0,0], Int[])
 
 function HelloCFR.isterminal(::Kuhn, h::Hist) # requires some sequence of actions
     h = h.action_hist
@@ -37,17 +38,11 @@ function HelloCFR.u(::Kuhn, i::Int, h::Hist)
     cards = h.cards
     L = length(as)
     has_higher_card = cards[i] > cards[other_player(i)]
-    if L > 2
+    if L ≥ 2
         if last(as) == PASS # +1 to player with highest card
-            has_higher_card ? 1 : -1
+            return has_higher_card ? 1 : -1
         else # +2 to player with highest card
-            has_higher_card ? 2 : -2
-        end
-    elseif L > 1
-        if last(as) == PASS # +1 to player with highest card
-            has_higher_card ? 1 : -1
-        else # +2 to player with highest card
-            has_higher_card ? 2 : -2
+            return has_higher_card ? 2 : -2
         end
     else
         return 0
@@ -67,7 +62,10 @@ function HelloCFR.chance_action(::Kuhn, h::Hist) # FIXME This is horiffically in
 end
 
 function HelloCFR.next_hist(::Kuhn, h, a::Vector{Int}) # TODO : remove Int[] gc (replace with NullVec)
-    return Hist(a,Int[])
+    return Hist(
+        @SVector [a[i] for i in 1:2]
+        , Int[]
+    )
 end
 
 # probably want to memoize or something

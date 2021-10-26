@@ -33,6 +33,15 @@ struct DebugInfoState
     hist::Vector{Vector{Float64}}
 end
 
+function DebugInfoState(L::Int)
+    return DebugInfoState(
+        fill(1/L, L),
+        zeros(L),
+        zeros(Float64,L),
+        Vector{Float64}[fill(1/L, L)]
+    )
+end
+
 function InfoState(L::Int)
     return InfoState(
         fill(1/L, L),
@@ -41,18 +50,32 @@ function InfoState(L::Int)
     )
 end
 
-struct Trainer{H, K, G}
-    explored::Vector{H}
-    I::Dict{K, InfoState} # [player, player_card, action_hist]
+struct Trainer{H, K, G, I}
+    explored::Vector{H} # convert to set
+    I::Dict{K, I} # [player, player_card, action_hist]
     game::G
 end
 
-function Trainer(game::Game{H,K}) where {H,K}
-    return Trainer(H[], Dict{K, InfoState}(), game)
+const REG_TRAINER{H,K,G} = Trainer{H,K,G,InfoState}
+const DEBUG_TRAINER{H,K,G} = Trainer{H,K,G,DebugInfoState}
+
+function Trainer(game::Game{H,K}; debug::Bool=false) where {H,K}
+    if debug
+        return Trainer(H[], Dict{K, DebugInfoState}(), game)
+    else
+        return Trainer(H[], Dict{K, InfoState}(), game)
+    end
+
 end
+
 @inline other_player(i) = 3-i
 
-function infoset(trainer, h)
+function insert_new_infostate(trainer::Trainer{H,K,G,DebugInfoState}, k::K) where {H,K,G}
+    I = DebugInfoState(length(actions(game,h)))
+    trainer.I[k] = I
+end
+
+function infoset(trainer::Trainer{H,K,G,INFO}, h::H) where {H,K,G,INFO}
     game = trainer.game
     k = infokey(game, h)
     if h ∈ trainer.explored # if h stored, return corresponding infoset pointer
@@ -62,7 +85,7 @@ function infoset(trainer, h)
         if haskey(trainer.I, k)
             return trainer.I[k]
         else
-            I = InfoState(length(actions(game,h)))
+            I = INFO(length(actions(game,h)))
             trainer.I[k] = I
             return I
         end
@@ -95,14 +118,13 @@ function CFR(trainer::Trainer, h, i, t, π_1, π_2)
         return CFR(trainer, h′, i, t, π_1, π_2)
     end
     I = infoset(trainer, h)
-    # change to `actions(game, h)` to remove dependency on BOTH this and `actions(game,I)`
     A = actions(game, h)
 
     v_σ = 0.0
     v_σ_Ia = zeros(Float64, length(A))
 
     for (k,a) in enumerate(A)
-        h′ = next_hist(game, h,a)
+        h′ = next_hist(game, h, a)
         if player(game, h) === 1
             v_σ_Ia[k] = CFR(trainer, h′, i, t, I.σ[k]*π_1, π_2)
         else
@@ -111,12 +133,12 @@ function CFR(trainer::Trainer, h, i, t, π_1, π_2)
         v_σ += I.σ[k]*v_σ_Ia[k]
     end
 
-    if player(game, h) === i
-        π_i = i === 1 ? π_1 : π_2
-        π_ni = i === 1 ? π_2 : π_1
+    if player(game, h) == i
+        π_i = i == 1 ? π_1 : π_2
+        π_ni = i == 1 ? π_2 : π_1
         for (k,a) in enumerate(A)
             I.r[k] += π_ni*(v_σ_Ia[k] - v_σ)
-            I.s[k] += π_i*I.σ[k] # why weighted by π_i? Isn't this just a weight sum?
+            I.s[k] += π_i*I.σ[k]
         end
     end
 
@@ -126,17 +148,30 @@ end
 function finalize_strategies!(trainer::Trainer)
     for I in values(trainer.I)
         I.σ .= I.s
-        I.σ ./= sum(I.σ)
+        s = sum(I.σ)
+        s > 0 ? I.σ ./= sum(I.σ) : fill!(I.σ, 1/length(I.σ))
     end
 end
 
-function train!(trainer::Trainer, N::Int)
+function train!(trainer::REG_TRAINER, N::Int)
     for _ in 1:N
         for i in 1:2
             CFR(trainer, initialhist(trainer.game), i, 0.0, 1.0, 1.0)
         end
         for I in values(trainer.I)
             regret_match!(I)
+        end
+    end
+end
+
+function train!(trainer::DEBUG_TRAINER, N::Int)
+    for _ in 1:N
+        for i in 1:2
+            CFR(trainer, initialhist(trainer.game), i, 0.0, 1.0, 1.0)
+        end
+        for I in values(trainer.I)
+            regret_match!(I)
+            push!(I.hist, copy(I.σ))
         end
     end
 end
@@ -179,7 +214,7 @@ function evaluate(trainer::Trainer, h, i, t, π_1, π_2)
 
     for (k,a) in enumerate(A)
         v_σ_Ia = 0.0
-        h′ = next_hist(game, h,a)
+        h′ = next_hist(game, h, a)
         if player(game, h) === 1
             v_σ_Ia = evaluate(trainer, h′, i, t, I.σ[k]*π_1, π_2)
         else

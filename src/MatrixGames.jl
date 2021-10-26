@@ -85,16 +85,16 @@ struct MatrixPlayer{T}
     strat_sum::Vector{Float64}
 end
 
-function MatrixPlayer(game::MatrixGame, id::Int)
+function MatrixPlayer(game::MatrixGame, id::Int; rand_init::Bool=true)
     n_actions = size(game.R, id)
     strategy = fill(1/n_actions, n_actions)
     MatrixPlayer(
         id,
         game,
         strategy,
-        [deepcopy(strategy)],
+        [copy(strategy)],
         zeros(n_actions),
-        deepcopy(strategy)
+        copy(strategy)
     )
 end
 
@@ -111,10 +111,10 @@ function MatrixPlayer(game::MatrixGame, id::Int, strategy::Vector{Float64})
     MatrixPlayer(
         id,
         game,
-        strategy,
-        [deepcopy(strategy)],
+        copy(strategy),
+        [copy(strategy)],
         zeros(n_actions),
-        deepcopy(strategy)
+        copy(strategy)
     )
 end
 
@@ -166,10 +166,7 @@ end
 function update_strategy!(p::MatrixPlayer)
     fill_normed_regret!(p.strategy, p.regret_sum)
     σ = p.strategy
-    σ′ = Vector{Float64}(undef, length(σ))
-    copyto!(σ′, σ)
-    push!(p.hist, σ′)
-
+    push!(p.hist, copy(σ))
     p.strat_sum .+= σ
 end
 
