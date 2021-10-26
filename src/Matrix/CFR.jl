@@ -3,7 +3,6 @@ import Plots.plot
 using LaTeXStrings
 using ProgressMeter
 using PushVectors
-import Base.==
 include("TerminalCache.jl")
 
 const SimpleIIHist = AbstractVector{Int}

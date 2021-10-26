@@ -20,7 +20,7 @@ RPS_NE_strat = fill(1/3,3)
 
     p1 = MatrixPlayer(RPS, 1, copy(init_strategy))
     p2 = MatrixPlayer(RPS, 2, copy(init_strategy))
-    train_one!(p1, p2, 1_000)
+    train_one!(p1, p2, 5_000)
     p = plot(p1,p2, lw=2)
     title!(p, "RM RPS Exploitative")
     display(p)

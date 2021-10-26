@@ -1,5 +1,5 @@
-using Random
 using StaticArrays
+using Combinatorics
 
 const PASS = 0
 const BET = 1
@@ -14,7 +14,11 @@ Base.:(==)(h1::Hist, h2::Hist) = h1.cards==h2.cards && h1.action_hist==h2.action
 
 Base.length(h::Hist) = length(h.action_hist)
 
-struct Kuhn <: Game{Hist, KuhnInfoKey} end
+struct Kuhn <: Game{Hist, KuhnInfoKey}
+    cards::Vector{Vector{Int}}
+end
+
+Kuhn() = Kuhn(collect(permutations([1,2,3],2)))
 
 # FIXME: lots of gc
 HelloCFR.initialhist(::Kuhn) = Hist(SA[0,0], Int[])
@@ -57,8 +61,12 @@ function HelloCFR.player(::Kuhn, h::Hist)
     end
 end
 
-function HelloCFR.chance_action(::Kuhn, h::Hist) # FIXME This is horiffically inefficient
-    return randperm(3)[1:2]
+function HelloCFR.chance_actions(game::Kuhn, h::Hist)
+    return game.cards
+end
+
+function HelloCFR.chance_action(game::Kuhn, h::Hist)
+    return rand(game.cards)
 end
 
 function HelloCFR.next_hist(::Kuhn, h, a::Vector{Int}) # TODO : remove Int[] gc (replace with NullVec)
