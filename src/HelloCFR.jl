@@ -17,6 +17,7 @@ export chance_action, chance_actions, other_player
 include(joinpath("Extensive", "CFR.jl"))
 include(joinpath("Extensive", "CSCFR.jl"))
 export CFRSolver, CSCFRSolver, train!
+export FullEvaluate, MonteCarloEvaluate
 
 
 include(joinpath("Games", "IIEMatrix.jl"))

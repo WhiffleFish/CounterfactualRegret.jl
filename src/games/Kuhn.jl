@@ -72,7 +72,7 @@ end
 function HelloCFR.next_hist(::Kuhn, h, a::Vector{Int}) # TODO : remove Int[] gc (replace with NullVec)
     return Hist(
         @SVector [a[i] for i in 1:2]
-        , Int[]
+        , h.action_hist
     )
 end
 
@@ -91,3 +91,19 @@ function HelloCFR.infokey(g::Kuhn, h::Hist)
 end
 
 HelloCFR.actions(::Kuhn, h::Hist) = PASS:BET
+
+
+## Extra
+import Base.print
+
+function Base.print(solver::AbstractCFRSolver{H,K,Kuhn,I}) where {H,K,I}
+    println("\n\n")
+    for (k,v) in solver.I
+        h = k[3]
+        h_str = rpad(join(h),3,"_")
+        σ = copy(v.s)
+        σ ./= sum(σ)
+        σ = round.(σ, digits=3)
+        println("Player: $(k[1]) \t Card: $(k[2]) \t h: $(join(h_str)) \t σ: $σ")
+    end
+end

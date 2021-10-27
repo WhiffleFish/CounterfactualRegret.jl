@@ -1,11 +1,10 @@
 using HelloCFR
-# include(joinpath(@__DIR__, "..", "src", "games", "CSCFR.jl"))
-include(joinpath(@__DIR__, "..", "src", "games", "Kuhn.jl"))
+using HelloCFR: Kuhn
 
 game = Kuhn()
-trainer = Trainer(game; debug=true)
+solver = CFRSolver(game; debug=true)
 
-train!(trainer, 1000)
+train!(solver, 1000)
 
 @profiler train!(trainer, 100_000) recur=:flat
 

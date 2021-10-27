@@ -154,25 +154,24 @@ function finalize_strategies!(solver::AbstractCFRSolver)
     end
 end
 
-function evaluate(solver::CFRSolver, N::Int)
+"""
+    `FullEvaluate(solver::AbstractCFRSolver)`
+
+Evaluate full tree traversed by CFR solver. \n
+Returns tuple corresponding to utilities for both players.
+"""
+function FullEvaluate(solver::AbstractCFRSolver)
     finalize_strategies!(solver)
 
-    p1_eval = 0.0
-    p2_eval = 0.0
-
     ih = initialhist(solver.game)
-    for _ in 1:N
-        p1_eval += evaluate(solver, ih, 1, 0, 1.0, 1.0)
-        p2_eval += evaluate(solver, ih, 2, 0, 1.0, 1.0)
-    end
 
-    p1_eval /= N
-    p2_eval /= N
+    p1_eval = FullEvaluate(solver, ih, 1, 0, 1.0, 1.0)
+    p2_eval = FullEvaluate(solver, ih, 2, 0, 1.0, 1.0)
 
     return (p1_eval, p2_eval)
 end
 
-function evaluate(solver::CFRSolver, h, i, t, π_1, π_2)
+function FullEvaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
     game = solver.game
     if isterminal(game, h)
         return u(game, i, h)
@@ -180,7 +179,7 @@ function evaluate(solver::CFRSolver, h, i, t, π_1, π_2)
         A = chance_actions(game, h)
         s = 0.0
         for a in A
-            s += CFR(solver, next_hist(game, h, a), i, t, π_1, π_2)
+            s += FullEvaluate(solver, next_hist(game, h, a), i, t, π_1, π_2)
         end
         return s / length(A)
     end
@@ -194,9 +193,9 @@ function evaluate(solver::CFRSolver, h, i, t, π_1, π_2)
         v_σ_Ia = 0.0
         h′ = next_hist(game, h, a)
         if player(game, h) === 1
-            v_σ_Ia = evaluate(solver, h′, i, t, I.σ[k]*π_1, π_2)
+            v_σ_Ia = FullEvaluate(solver, h′, i, t, I.σ[k]*π_1, π_2)
         else
-            v_σ_Ia = evaluate(solver, h′, i, t, π_1, I.σ[k]*π_2)
+            v_σ_Ia = FullEvaluate(solver, h′, i, t, π_1, I.σ[k]*π_2)
         end
         v_σ += I.σ[k]*v_σ_Ia
     end

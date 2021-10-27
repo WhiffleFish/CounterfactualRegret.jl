@@ -11,33 +11,58 @@ using Test
     ])
     trainer = CFRSolver(game)
     train!(trainer, 1000)
-
     s1 = trainer.I[0].s
     s1 ./= sum(s1)
-    @test ≈(s1, fill(1/3,3), rtol=0.001)
-
+        @test ≈(s1, fill(1/3,3), rtol=0.001)
     s2 = trainer.I[1].s
     s2 ./= sum(s2)
-    @test ≈(s2, fill(1/3,3), rtol=0.001)
-
+        @test ≈(s2, fill(1/3,3), rtol=0.001)
+    F_eval = FullEvaluate(trainer)
+        @test all( .≈(F_eval,(0,0), rtol=0.01))
+    MC_eval = MonteCarloEvaluate(trainer,1)
+        @test all( .≈(MC_eval,(0,0), rtol=0.01))
 
     ## Prisoners Dilemma
     game = IIEMatrixGame([
         (-1,-1) (-3,0);
         (0,-3) (-2,-2)
     ])
-
     trainer = CFRSolver(game)
     train!(trainer, 1000)
-
     s1 = trainer.I[0].s
     s1 ./= sum(s1)
-    @test ≈(s1, [0,1], rtol=0.001)
-
+        @test ≈(s1, [0,1], rtol=0.001)
     s2 = trainer.I[1].s
     s2 ./= sum(s2)
-    @test ≈(s2, [0,1], rtol=0.001)
+        @test ≈(s2, [0,1], rtol=0.001)
+    F_eval = FullEvaluate(trainer)
+        @test all( .≈(F_eval,(-2,-2), rtol=0.01))
+    MC_eval = MonteCarloEvaluate(trainer,1)
+        @test all( .≈(MC_eval,(-2,-2), rtol=0.01))
+
+    # https://sites.math.northwestern.edu/~clark/364/handouts/bimatrix-mixed.pdf
+    game = HelloCFR.IIEMatrixGame([
+        (1,1) (0,0) (0,0);
+        (0,0) (0,2) (3,0);
+        (0,0) (2,0) (0,3);
+    ])
+    trainer = CFRSolver(game)
+    train!(trainer, 100_000)
+    NEs = [[6/11,3/11,2/11], [0,3/5,2/5], [1,0,0]]
+    s1 = trainer.I[0].s
+    s1 ./= sum(s1)
+        @test ≈(s1, NEs[2], rtol=0.01)
+        # @test ≈(s1, NEs[1], rtol=0.01) || ≈(s1, NEs[2], rtol=0.01) || ≈(s1, NEs[3], rtol=0.01)
+    s2 = trainer.I[1].s
+    s2 ./= sum(s2)
+        @test ≈(s2, NEs[2], rtol=0.01)
+        # @test ≈(s2, NEs[1], rtol=0.01) || ≈(s2, NEs[2], rtol=0.01) || ≈(s2, NEs[3], rtol=0.01)
+    F_eval = FullEvaluate(trainer)
+        @test all( .≈(F_eval,(6/5,6/5), rtol=0.01))
+    MC_eval = MonteCarloEvaluate(trainer,1)
+        @test all( .≈(MC_eval,(6/5,6/5), rtol=0.01))
 end
+
 
 # https://upload.wikimedia.org/wikipedia/commons/a/a9/Kuhn_poker_tree.svg
 @testset "Kuhn CFR" begin

@@ -53,20 +53,23 @@ function CFR(solver::CSCFRSolver, h, i, t, π_1, π_2)
     return v_σ
 end
 
-#=
+
 """
-Monte Carlo evaluation sampling chance player actions
+    `MonteCarloEvaluate(solver::AbstractCFRSolver, N::Int)`
+
+Monte Carlo evaluation sampling chance player actions. \n
+Returns tuple corresponding to utilities for both players.
 """
-function evaluate(trainer::CSCFRSolver, N::Int)
-    finalize_strategies!(trainer)
+function MonteCarloEvaluate(solver::AbstractCFRSolver, N::Int)
+    finalize_strategies!(solver)
 
     p1_eval = 0.0
     p2_eval = 0.0
 
-    ih = initialhist(trainer.game)
+    ih = initialhist(solver.game)
     for _ in 1:N
-        p1_eval += evaluate(trainer, ih, 1, 0, 1.0, 1.0)
-        p2_eval += evaluate(trainer, ih, 2, 0, 1.0, 1.0)
+        p1_eval += MonteCarloEvaluate(solver, ih, 1, 0, 1.0, 1.0)
+        p2_eval += MonteCarloEvaluate(solver, ih, 2, 0, 1.0, 1.0)
     end
 
     p1_eval /= N
@@ -75,17 +78,17 @@ function evaluate(trainer::CSCFRSolver, N::Int)
     return (p1_eval, p2_eval)
 end
 
-function evaluate(trainer::Trainer, h, i, t, π_1, π_2)
-    game = trainer.game
+function MonteCarloEvaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
+    game = solver.game
     if isterminal(game, h)
         return u(game, i, h)
     elseif player(game, h) === 0 # chance player
         a = chance_action(game, h)
         h′ = next_hist(game,h,a)
-        return evaluate(trainer, h′, i, t, π_1, π_2)
+        return MonteCarloEvaluate(solver, h′, i, t, π_1, π_2)
     end
 
-    I = infoset(trainer, h)
+    I = infoset(solver, h)
     A = actions(game, h)
 
     v_σ = 0.0
@@ -94,13 +97,12 @@ function evaluate(trainer::Trainer, h, i, t, π_1, π_2)
         v_σ_Ia = 0.0
         h′ = next_hist(game, h, a)
         if player(game, h) === 1
-            v_σ_Ia = evaluate(trainer, h′, i, t, I.σ[k]*π_1, π_2)
+            v_σ_Ia = MonteCarloEvaluate(solver, h′, i, t, I.σ[k]*π_1, π_2)
         else
-            v_σ_Ia = evaluate(trainer, h′, i, t, π_1, I.σ[k]*π_2)
+            v_σ_Ia = MonteCarloEvaluate(solver, h′, i, t, π_1, I.σ[k]*π_2)
         end
         v_σ += I.σ[k]*v_σ_Ia
     end
 
     return v_σ
 end
-=#
