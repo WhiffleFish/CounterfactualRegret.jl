@@ -83,7 +83,7 @@ end
 function CFR(solver::CFRSolver, h, i, t, π_1, π_2)
     game = solver.game
     if isterminal(game, h)
-        return u(game, i, h)
+        return utility(game, i, h)
     elseif player(game, h) === 0 # chance player
         A = chance_actions(game, h)
         s = 0.0
@@ -174,7 +174,7 @@ end
 function FullEvaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
     game = solver.game
     if isterminal(game, h)
-        return u(game, i, h)
+        return utility(game, i, h)
     elseif player(game, h) === 0 # chance player
         A = chance_actions(game, h)
         s = 0.0

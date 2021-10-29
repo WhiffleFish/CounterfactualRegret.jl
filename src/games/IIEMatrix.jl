@@ -15,7 +15,7 @@ HelloCFR.initialhist(::IIEMatrixGame) = Int[]
 
 HelloCFR.isterminal(::IIEMatrixGame, h::MAT_HIST) = length(h) > 1
 
-function HelloCFR.u(game::IIEMatrixGame, i::Int, h::MAT_HIST)
+function HelloCFR.utility(game::IIEMatrixGame, i::Int, h::MAT_HIST)
     length(h) > 1 ? game.R[h[1], h[2]][i] : 0
 end
 

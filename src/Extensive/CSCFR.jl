@@ -19,7 +19,7 @@ end
 function CFR(solver::CSCFRSolver, h, i, t, π_1, π_2)
     game = solver.game
     if isterminal(game, h)
-        return u(game, i, h)
+        return utility(game, i, h)
     elseif player(game, h) === 0 # chance player
         a = chance_action(game, h)
         h′ = next_hist(game,h,a)
@@ -81,7 +81,7 @@ end
 function MonteCarloEvaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
     game = solver.game
     if isterminal(game, h)
-        return u(game, i, h)
+        return utility(game, i, h)
     elseif player(game, h) === 0 # chance player
         a = chance_action(game, h)
         h′ = next_hist(game,h,a)

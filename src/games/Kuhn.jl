@@ -37,17 +37,21 @@ function HelloCFR.isterminal(::Kuhn, h::Hist) # requires some sequence of action
     end
 end
 
-function HelloCFR.u(::Kuhn, i::Int, h::Hist)
+function HelloCFR.utility(::Kuhn, i::Int, h::Hist)
     as = h.action_hist
     cards = h.cards
     L = length(as)
     has_higher_card = cards[i] > cards[other_player(i)]
-    if L ≥ 2
-        if last(as) == PASS # +1 to player with highest card
-            return has_higher_card ? 1 : -1
-        else # +2 to player with highest card
-            return has_higher_card ? 2 : -2
-        end
+    if as == SA[PASS, PASS]
+        return has_higher_card ? 1 : -1
+    elseif as == SA[PASS, BET, PASS]
+        return i==2 ? 1 : -1
+    elseif as == SA[PASS, BET, BET]
+        return has_higher_card ? 2 : -2
+    elseif as == SA[BET, PASS]
+        return i==1 ? 1 : -1
+    elseif as == SA[BET, BET]
+        return has_higher_card ? 2 : -2
     else
         return 0
     end
@@ -69,7 +73,7 @@ function HelloCFR.chance_action(game::Kuhn, h::Hist)
     return rand(game.cards)
 end
 
-function HelloCFR.next_hist(::Kuhn, h, a::Vector{Int}) # TODO : remove Int[] gc (replace with NullVec)
+function HelloCFR.next_hist(::Kuhn, h, a::Vector{Int})
     return Hist(
         @SVector [a[i] for i in 1:2]
         , h.action_hist
@@ -81,9 +85,7 @@ function HelloCFR.next_hist(::Kuhn, h::Hist, a::Int)
     return Hist(h.cards, [h.action_hist;a])
 end
 
-"""
-Map history to key unique to all histories in one info set
-"""
+
 function HelloCFR.infokey(g::Kuhn, h::Hist)
     p = player(g,h)
     card = p > 0 ? h.cards[p] : 0
