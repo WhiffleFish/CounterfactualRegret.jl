@@ -65,6 +65,8 @@ function HelloCFR.player(::Kuhn, h::Hist)
     end
 end
 
+HelloCFR.player(::Kuhn, k::KuhnInfoKey) = first(k)
+
 function HelloCFR.chance_actions(game::Kuhn, h::Hist)
     return game.cards
 end
@@ -80,7 +82,7 @@ function HelloCFR.next_hist(::Kuhn, h, a::Vector{Int})
     )
 end
 
-# probably want to memoize or something
+# FIXME: lots of gc
 function HelloCFR.next_hist(::Kuhn, h::Hist, a::Int)
     return Hist(h.cards, [h.action_hist;a])
 end

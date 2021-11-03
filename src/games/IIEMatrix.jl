@@ -1,9 +1,11 @@
 const MAT_INFO_KEY = Int
 const MAT_HIST = Vector{Int}
 
-struct IIEMatrixGame <: Game{MAT_HIST, MAT_INFO_KEY}
-    R::Matrix{Tuple{Int,Int}}
+struct IIEMatrixGame{T} <: Game{MAT_HIST, MAT_INFO_KEY}
+    R::Matrix{Tuple{T,T}}
 end
+
+IIEMatrixGame(g::MatrixGame) = IIEMatrixGame(g.R)
 
 IIEMatrixGame() = IIEMatrixGame([
     (0,0) (-1,1) (1,-1);
@@ -20,6 +22,8 @@ function HelloCFR.utility(game::IIEMatrixGame, i::Int, h::MAT_HIST)
 end
 
 HelloCFR.player(::IIEMatrixGame, h::MAT_HIST) = length(h)+1
+
+HelloCFR.player(::IIEMatrixGame, k::MAT_INFO_KEY) = k+1
 
 HelloCFR.next_hist(::IIEMatrixGame, h, a) = [h;a]
 
@@ -57,7 +61,7 @@ function cumulative_strategies(hist::Vector{Vector{Float64}})
     return mat
 end
 
-function Plots.plot(solver::AbstractCFRSolver{H,K,IIEMatrixGame,DebugInfoState};kwargs...) where {H,K}
+function Plots.plot(solver::AbstractCFRSolver{H,K,IIEMatrixGame{T},DebugInfoState};kwargs...) where {H,K,T}
     p1 = solver.I[0]
     p2 = solver.I[1]
 
