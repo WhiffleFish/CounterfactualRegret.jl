@@ -39,7 +39,7 @@ end
 
 import Base.print
 
-function Base.print(solver::AbstractCFRSolver{H,K,IIEMatrixGame,I}) where {H,K,I}
+function Base.print(solver::AbstractCFRSolver{H,K,IIEMatrixGame{T},I}) where {H,K,T,I}
     println("\n")
     for (k,v) in solver.I
         σ = copy(v.s)

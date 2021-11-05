@@ -123,9 +123,9 @@ end
 
 function train!(solver::REG_CFRSOLVER, N::Int)
     ih = initialhist(solver.game)
-    for _ in 1:N
+    for t in 1:N
         for i in 1:2
-            CFR(solver, ih, i, 0.0, 1.0, 1.0)
+            CFR(solver, ih, i, t, 1.0, 1.0)
         end
         for I in values(solver.I)
             regret_match!(I)
@@ -135,9 +135,9 @@ end
 
 function train!(solver::DEBUG_CFRSOLVER, N::Int)
     ih = initialhist(solver.game)
-    for _ in 1:N
+    for t in 1:N
         for i in 1:2
-            CFR(solver, ih, i, 0.0, 1.0, 1.0)
+            CFR(solver, ih, i, t, 1.0, 1.0)
         end
         for I in values(solver.I)
             regret_match!(I)
@@ -201,4 +201,27 @@ function FullEvaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
     end
 
     return v_σ
+end
+
+function cumulative_strategies(I::DebugInfoState)
+    L = length(I.σ)
+    mat = Matrix{Float64}(undef, length(I.hist), L)
+    σ = zeros(Float64, L)
+
+    for (i,σ_i) in enumerate(I.hist)
+        σ = σ + (σ_i - σ)/i
+        mat[i,:] .= σ
+    end
+    return mat
+end
+
+function Plots.plot(I::DebugInfoState;kwargs...)
+    L = length(I.σ)
+    labels = Matrix{String}(undef, 1, L)
+    for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
+
+    plt = Plots.plot(cumulative_strategies(I), labels=labels; kwargs...)
+
+    ylabel!(plt, "Strategy Action Proportion")
+    xlabel!(plt, "Training Steps")
 end
