@@ -16,10 +16,11 @@ export infokeytype, histtype
 
 
 include(joinpath("Extensive", "CFR.jl"))
-include(joinpath("Extensive", "CSCFR.jl"))
+include(joinpath("Extensive", "CSMCCFR.jl"))
+include(joinpath("Extensive", "ESMCCFR.jl"))
 include(joinpath("Extensive", "DCFR.jl"))
-export CFRSolver, CSCFRSolver, DCFRSolver, train!
-export FullEvaluate, MonteCarloEvaluate
+export CFRSolver, CSCFRSolver, DCFRSolver, ESCFRSolver
+export train!, FullEvaluate, MonteCarloEvaluate
 
 include(joinpath("Games", "Extensive2Matrix.jl"))
 include(joinpath("Games", "IIEMatrix.jl"))

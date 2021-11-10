@@ -19,7 +19,7 @@ function DebugInfoState(L::Int)
     return DebugInfoState(
         fill(1/L, L),
         zeros(L),
-        zeros(Float64,L),
+        fill(1/L, L),
         Vector{Float64}[fill(1/L, L)]
     )
 end
@@ -28,7 +28,7 @@ function InfoState(L::Int)
     return InfoState(
         fill(1/L, L),
         zeros(L),
-        zeros(Float64,L)
+        fill(1/L, L),
     )
 end
 
