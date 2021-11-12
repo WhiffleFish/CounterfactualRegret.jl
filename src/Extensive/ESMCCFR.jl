@@ -70,7 +70,7 @@ function ESCFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
     end
 end
 
-# TODO: Validate regret update not entirely confident in code nor MCCFR paper eqn.
+# TODO: Validate regret update. Not entirely confident in code nor MCCFR paper eqn.
 function CFR(solver::ESCFRSolver, h, i, t, π_1, π_2)
     game = solver.game
     if isterminal(game, h)
@@ -103,7 +103,10 @@ function CFR(solver::ESCFRSolver, h, i, t, π_1, π_2)
             I.s[k] += π_i*I.σ[k]
         end
     else
-        a = I.a_idx != 0 ? A[I.a_idx] : A[rand(I)]
+        a_idx = I.a_idx
+        a_idx == 0 && (a_idx = rand(I))
+        I.a_idx = a_idx
+        a = A[a_idx]
         h′ = next_hist(game, h, a)
         v_σ = CFR(solver, h′, i, t, π_1, π_2)
     end

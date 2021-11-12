@@ -85,7 +85,10 @@ struct MatrixPlayer{T}
     strat_sum::Vector{Float64}
 end
 
-function MatrixPlayer(game::MatrixGame, id::Int; rand_init::Bool=true)
+player(g::MatrixGame, id::Int) = MatrixPlayer(g, id)
+player(g::MatrixGame, id::Int, s::Vector{Float64}) = MatrixPlayer(g, id, s)
+
+function MatrixPlayer(game::MatrixGame, id::Int)
     n_actions = size(game.R, id)
     strategy = fill(1/n_actions, n_actions)
     MatrixPlayer(

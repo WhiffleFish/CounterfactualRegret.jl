@@ -51,16 +51,30 @@ function CFRMatrixTest(sol_type, N::Int)
     NEs = [[6/11,3/11,2/11], [0,3/5,2/5], [1,0,0]]
     s1 = trainer.I[0].s
     s1 ./= sum(s1)
-        @test ≈(s1, NEs[2], atol=0.01)
-        # @test ≈(s1, NEs[1], rtol=0.01) || ≈(s1, NEs[2], rtol=0.01) || ≈(s1, NEs[3], rtol=0.01)
+        @test begin
+            ≈(s1, NEs[1], atol=0.01) ||
+            ≈(s1, NEs[2], atol=0.01) ||
+            ≈(s1, NEs[3], atol=0.01)
+        end
     s2 = trainer.I[1].s
     s2 ./= sum(s2)
-        @test ≈(s2, NEs[2], atol=0.01)
-        # @test ≈(s2, NEs[1], rtol=0.01) || ≈(s2, NEs[2], rtol=0.01) || ≈(s2, NEs[3], rtol=0.01)
+        @test begin
+            ≈(s2, NEs[1], atol=0.01) ||
+            ≈(s2, NEs[2], atol=0.01) ||
+            ≈(s2, NEs[3], atol=0.01)
+        end
     F_eval = FullEvaluate(trainer)
-        @test all( .≈(F_eval,(6/5,6/5), atol=0.01))
+    @test begin
+        all( .≈(F_eval,(6/5,6/5), atol=0.01)) ||
+        all( .≈(F_eval,(6/11,6/11), atol=0.01)) ||
+        all( .≈(F_eval,(1,1), atol=0.01))
+    end
     MC_eval = MonteCarloEvaluate(trainer,1)
-        @test all( .≈(MC_eval,(6/5,6/5), atol=0.01))
+    @test begin
+        all( .≈(F_eval,(6/5,6/5), atol=0.01)) ||
+        all( .≈(F_eval,(6/11,6/11), atol=0.01)) ||
+        all( .≈(F_eval,(1,1), atol=0.01))
+    end
 end
 
 function CFRKuhnTest(sol_type, N::Int, atol::Float64)
@@ -123,5 +137,5 @@ end
     @testset "DCFR Kuhn" begin CFRKuhnTest(DCFRSolver, 200_000, 0.01) end
 
     @testset "ESCFR Matrix" begin CFRMatrixTest(ESCFRSolver, 500_000) end
-    @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_000_000, 0.01) end
+    @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_500_000, 0.01) end
 end

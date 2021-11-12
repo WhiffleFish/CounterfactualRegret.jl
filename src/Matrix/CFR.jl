@@ -70,6 +70,9 @@ struct SimpleIIPlayer{T}
     regret_avg::Vector{Float64}
 end
 
+player(g::SimpleIIGame, id::Int) = SimpleIIPlayer(g,id)
+player(g::SimpleIIGame, id::Int, s::Vector{Float64}) = SimpleIIPlayer(g, id, s)
+
 function SimpleIIPlayer(game::SimpleIIGame, id::Int)
     n_actions = size(game.R, id)
     strategy = fill(1/n_actions, n_actions)
