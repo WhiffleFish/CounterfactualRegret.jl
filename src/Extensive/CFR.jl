@@ -1,6 +1,6 @@
 abstract type IIESolver end # Imperfect Information Extensive Game Solver
 abstract type AbstractInfoState end
-abstract type AbstractCFRSolver{H,K,G<:Game,I<:AbstractInfoState} <: IIESolver end
+abstract type AbstractCFRSolver{K,G<:Game,I<:AbstractInfoState} <: IIESolver end
 
 struct InfoState <: AbstractInfoState
     σ::Vector{Float64}
@@ -20,7 +20,7 @@ function DebugInfoState(L::Int)
         fill(1/L, L),
         zeros(L),
         fill(1/L, L),
-        Vector{Float64}[fill(1/L, L)]
+        Vector{Float64}[]
     )
 end
 
@@ -32,38 +32,29 @@ function InfoState(L::Int)
     )
 end
 
-struct CFRSolver{H,K,G,I} <: AbstractCFRSolver{H,K,G,I}
-    explored::Vector{H}
+struct CFRSolver{K,G,I} <: AbstractCFRSolver{K,G,I}
     I::Dict{K, I}
     game::G
 end
 
 function CFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
     if debug
-        return CFRSolver(H[], Dict{K, DebugInfoState}(), game)
+        return CFRSolver(Dict{K, DebugInfoState}(), game)
     else
-        return CFRSolver(H[], Dict{K, InfoState}(), game)
+        return CFRSolver(Dict{K, InfoState}(), game)
     end
 end
 
-const REG_CFRSOLVER{H,K,G} = AbstractCFRSolver{H,K,G,InfoState}
-const DEBUG_CFRSOLVER{H,K,G} = AbstractCFRSolver{H,K,G,DebugInfoState}
+const REG_CFRSOLVER{K,G} = AbstractCFRSolver{K,G,InfoState}
+const DEBUG_CFRSOLVER{K,G} = AbstractCFRSolver{K,G,DebugInfoState}
 
-function infoset(solver::AbstractCFRSolver{H,K,G,INFO}, h::H) where {H,K,G,INFO}
+function infoset(solver::AbstractCFRSolver{K,G,INFO}, h) where {K,G,INFO}
     game = solver.game
     k = infokey(game, h)
-    if h ∈ solver.explored # if h stored, return corresponding infoset pointer
-        return solver.I[k]
-    else
-        push!(solver.explored, h)
-        if haskey(solver.I, k)
-            return solver.I[k]
-        else
-            I = INFO(length(actions(game,h)))
-            solver.I[k] = I
-            return I
-        end
+    I = get!(solver.I, k) do
+        INFO(length(actions(game,h)))
     end
+    return I
 end
 
 function regret_match!(I::AbstractInfoState)
@@ -141,7 +132,7 @@ function train!(solver::DEBUG_CFRSOLVER, N::Int)
         end
         for I in values(solver.I)
             regret_match!(I)
-            push!(I.hist, copy(I.σ))
+            push!(I.hist, copy(I.s) ./ sum(I.s))
         end
     end
 end
@@ -230,9 +221,8 @@ end
     @series begin
         subplot := 1
         ylabel := "Strategy"
-        title := "Player 1"
         labels := labels
-        cumulative_strategies(I)
+        reduce(hcat,I.hist)'
     end
 
 end

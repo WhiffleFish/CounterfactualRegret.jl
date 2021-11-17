@@ -2,7 +2,7 @@
 Convert extensive form to matrix form
 =#
 
-infodict(sol::AbstractCFRSolver{H,K,G,I}) where {H,K,G,I} = sol.I::Dict{K,I}
+infodict(sol::AbstractCFRSolver{K,G,I}) where {K,G,I} = sol.I::Dict{K,I}
 strategy(I::AbstractInfoState) = I.σ::Vector{Float64}
 
 function pure_strategies(sol::CFRSolver, p::Int)

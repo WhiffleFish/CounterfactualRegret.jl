@@ -34,13 +34,12 @@ function DebugMCInfoState(L::Int)
         fill(1/L, L),
         zeros(L),
         fill(1/L, L),
-        Vector{Float64}[fill(1/L, L)],
+        Vector{Float64}[],
         0
     )
 end
 
-struct ESCFRSolver{H,K,G,I} <: AbstractCFRSolver{H,K,G,I}
-    explored::Vector{H}
+struct ESCFRSolver{K,G,I} <: AbstractCFRSolver{K,G,I}
     I::Dict{K, I}
     game::G
 end
@@ -64,9 +63,9 @@ Random.rand(I::AbstractInfoState) = rand(Random.GLOBAL_RNG, I)
 
 function ESCFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
     if debug
-        return ESCFRSolver(H[], Dict{K, DebugMCInfoState}(), game)
+        return ESCFRSolver(Dict{K, DebugMCInfoState}(), game)
     else
-        return ESCFRSolver(H[], Dict{K, MCInfoState}(), game)
+        return ESCFRSolver(Dict{K, MCInfoState}(), game)
     end
 end
 
@@ -114,7 +113,7 @@ function CFR(solver::ESCFRSolver, h, i, t, π_1, π_2)
     return v_σ
 end
 
-function train!(solver::ESCFRSolver, N::Int)
+function train!(solver::ESCFRSolver{K,G,INFO}, N::Int) where {K,G,INFO<:MCInfoState}
     ih = initialhist(solver.game)
     for t in 1:N
         for i in 1:2
@@ -122,6 +121,20 @@ function train!(solver::ESCFRSolver, N::Int)
         end
         for I in values(solver.I)
             regret_match!(I)
+            I.a_idx = 0
+        end
+    end
+end
+
+function train!(solver::ESCFRSolver{K,G,INFO}, N::Int) where {K,G,INFO<:DebugMCInfoState}
+    ih = initialhist(solver.game)
+    for t in 1:N
+        for i in 1:2
+            CFR(solver, ih, i, t, 1.0, 1.0)
+        end
+        for I in values(solver.I)
+            regret_match!(I)
+            push!(I.hist, copy(I.s) ./ sum(I.s))
             I.a_idx = 0
         end
     end

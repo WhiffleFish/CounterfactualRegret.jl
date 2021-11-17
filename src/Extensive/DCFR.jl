@@ -1,5 +1,4 @@
-struct DCFRSolver{H,K,G,I} <: AbstractCFRSolver{H,K,G,I}
-    explored::Vector{H}
+struct DCFRSolver{K,G,I} <: AbstractCFRSolver{K,G,I}
     I::Dict{K, I}
     game::G
     α::Float64
@@ -19,9 +18,9 @@ function DCFRSolver(
         debug::Bool=false) where {H,K}
 
     if debug
-        return DCFRSolver(H[], Dict{K, DebugInfoState}(), game, alpha, beta, gamma)
+        return DCFRSolver(Dict{K, DebugInfoState}(), game, alpha, beta, gamma)
     else
-        return DCFRSolver(H[], Dict{K, InfoState}(), game, alpha, beta, gamma)
+        return DCFRSolver(Dict{K, InfoState}(), game, alpha, beta, gamma)
     end
 end
 

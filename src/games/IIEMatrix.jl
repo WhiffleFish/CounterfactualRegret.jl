@@ -77,7 +77,7 @@ end
         ylabel := "Strategy"
         title := "Player 1"
         labels := labels1
-        cumulative_strategies(sol.I[0])
+        reduce(hcat,I[0].hist)'
     end
 
     L2 = length(sol.I[1].σ)
@@ -88,6 +88,6 @@ end
         subplot := 2
         title := "Player 2"
         labels := labels2
-        cumulative_strategies(sol.I[1])
+        reduce(hcat,I[1].hist)'
     end
 end

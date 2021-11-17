@@ -2,17 +2,16 @@
 Chance Sampling Counterfactual Regret Minimization
 =#
 
-struct CSCFRSolver{H,K,G,I} <: AbstractCFRSolver{H,K,G,I}
-    explored::Vector{H}
+struct CSCFRSolver{K,G,I} <: AbstractCFRSolver{K,G,I}
     I::Dict{K, I}
     game::G
 end
 
 function CSCFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
     if debug
-        return CSCFRSolver(H[], Dict{K, DebugInfoState}(), game)
+        return CSCFRSolver(Dict{K, DebugInfoState}(), game)
     else
-        return CSCFRSolver(H[], Dict{K, InfoState}(), game)
+        return CSCFRSolver(Dict{K, InfoState}(), game)
     end
 end
 
