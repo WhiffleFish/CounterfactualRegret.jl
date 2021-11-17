@@ -24,9 +24,9 @@ export train!, FullEvaluate, MonteCarloEvaluate
 
 
 # Miscellaneous Games
-include(joinpath("Games", "Extensive2Matrix.jl"))
-include(joinpath("Games", "IIEMatrix.jl"))
-include(joinpath("Games", "Kuhn.jl"))
-include(joinpath("Games", "SpaceGame.jl"))
+include(joinpath("games", "Extensive2Matrix.jl"))
+include(joinpath("games", "IIEMatrix.jl"))
+include(joinpath("games", "Kuhn.jl"))
+include(joinpath("games", "SpaceGame.jl"))
 
 end # module
