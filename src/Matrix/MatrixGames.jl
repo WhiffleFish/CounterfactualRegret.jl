@@ -1,7 +1,6 @@
-using StatsBase
-using Plots
+using Random
+using RecipesBase
 using LaTeXStrings
-import Plots.plot
 # restricted to 2-player game
 
 """
@@ -144,8 +143,19 @@ function regret(game::MatrixGame, i::Int, a1::Int, a2::Int)
     end
 end
 
-# Maybe start strategy as being weight vector?
-gen_action(p::MatrixPlayer) = sample(weights(p.strategy))
+function gen_action(rng::AbstractRNG, p::MatrixPlayer)
+    σ = p.strategy
+    t = rand(rng)
+    i = 1
+    cw = σ[1]
+    while cw < t && i < length(σ)
+        i += 1
+        @inbounds cw += σ[i]
+    end
+    return i
+end
+
+gen_action(p::MatrixPlayer) = gen_action(Random.GLOBAL_RNG, p)
 
 function update_regret!(p::MatrixPlayer, a1::Int, a2::Int)
     p.regret_sum .+= regret(p.game, p.id, a1, a2)
@@ -234,30 +244,50 @@ function cumulative_strategies(p::MatrixPlayer)
     return mat
 end
 
-function Plots.plot(p1::MatrixPlayer, p2::MatrixPlayer; kwargs...)
-    L = length(p1.strategy)
-    labels = Matrix{String}(undef, 1, L)
-    for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
+@recipe function f(p1::MatrixPlayer, p2::MatrixPlayer)
+    layout --> 2
+    link := :both
+    framestyle := [:axes :axes]
 
-    plt1 = Plots.plot(cumulative_strategies(p1), labels=labels; kwargs...)
+    xlabel := "Training Steps"
 
-    plt2 = Plots.plot(cumulative_strategies(p2), labels=""; kwargs...)
+    L1 = length(p1.strategy)
+    labels1 = Matrix{String}(undef, 1, L1)
+    for i in eachindex(labels1); labels1[i] = L"a_{%$(i)}"; end
 
-    title!(plt1, "Player 1")
-    ylabel!(plt1, "Strategy Action Proportion")
-    title!(plt2, "Player 2")
-    plot(plt1, plt2, layout= @layout [a b])
-    xlabel!("Training Steps")
+    @series begin
+        subplot := 1
+        ylabel := "Strategy"
+        title := "Player 1"
+        labels := labels1
+        cumulative_strategies(p1)
+    end
+
+    L2 = length(p2.strategy)
+    labels2 = Matrix{String}(undef, 1, L2)
+    for i in eachindex(labels2); labels2[i] = L"a_{%$(i)}"; end
+
+    @series begin
+        subplot := 2
+        title := "Player 2"
+        labels := labels2
+        cumulative_strategies(p2)
+    end
 end
 
-function Plots.plot(p::MatrixPlayer; kwargs...)
+@recipe function f(p::MatrixPlayer)
+
+    xlabel := "Training Steps"
+
     L = length(p.strategy)
     labels = Matrix{String}(undef, 1, L)
     for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
 
-    plt = Plots.plot(cumulative_strategies(p), labels=labels; kwargs...)
-
-    title!(plt, "Player 1")
-    ylabel!(plt, "Strategy Action Proportion")
-    xlabel!(plt, "Training Steps")
+    @series begin
+        subplot := 1
+        ylabel := "Strategy"
+        title := "Player 1"
+        labels := labels
+        cumulative_strategies(p)
+    end
 end

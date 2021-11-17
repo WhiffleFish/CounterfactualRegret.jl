@@ -34,12 +34,12 @@ function CounterfactualRegret.actions(game::IIEMatrixGame, h::MAT_HIST)
 end
 
 
-## Extra
+## extras
 
 
 import Base.print
 
-function Base.print(solver::AbstractCFRSolver{H,K,IIEMatrixGame{T},I}) where {H,K,T,I}
+function Base.print(solver::AbstractCFRSolver{H,K,G}) where {H,K,G<:IIEMatrixGame}
     println("\n")
     for (k,v) in solver.I
         σ = copy(v.s)
@@ -61,21 +61,33 @@ function cumulative_strategies(hist::Vector{Vector{Float64}})
     return mat
 end
 
-function Plots.plot(solver::AbstractCFRSolver{H,K,IIEMatrixGame{T},DebugInfoState};kwargs...) where {H,K,T}
-    p1 = solver.I[0]
-    p2 = solver.I[1]
+@recipe function f(sol::AbstractCFRSolver{H,K,G}) where {H,K,G <: IIEMatrixGame}
+    layout --> 2
+    link := :both
+    framestyle := [:axes :axes]
 
-    L = length(p1.σ)
-    labels = Matrix{String}(undef, 1, L)
-    for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
+    xlabel := "Training Steps"
 
-    plt1 = Plots.plot(cumulative_strategies(p1.hist), labels=labels; kwargs...)
+    L1 = length(sol.I[0].σ)
+    labels1 = Matrix{String}(undef, 1, L1)
+    for i in eachindex(labels1); labels1[i] = L"a_{%$(i)}"; end
 
-    plt2 = Plots.plot(cumulative_strategies(p2.hist), labels=""; kwargs...)
+    @series begin
+        subplot := 1
+        ylabel := "Strategy"
+        title := "Player 1"
+        labels := labels1
+        cumulative_strategies(sol.I[0])
+    end
 
-    title!(plt1, "Player 1")
-    ylabel!(plt1, "Strategy Action Proportion")
-    title!(plt2, "Player 2")
-    plot(plt1, plt2, layout= @layout [a b])
-    xlabel!("Training Steps")
+    L2 = length(sol.I[1].σ)
+    labels2 = Matrix{String}(undef, 1, L2)
+    for i in eachindex(labels2); labels2[i] = L"a_{%$(i)}"; end
+
+    @series begin
+        subplot := 2
+        title := "Player 2"
+        labels := labels2
+        cumulative_strategies(sol.I[1])
+    end
 end

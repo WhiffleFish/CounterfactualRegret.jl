@@ -1,5 +1,4 @@
-using Plots
-import Plots.plot
+using RecipesBase
 using LaTeXStrings
 using ProgressMeter
 using PushVectors
@@ -330,30 +329,54 @@ function evaluate(p1::SimpleIIPlayer, p2::SimpleIIPlayer)
     return p1_eval, p2_eval
 end
 
-function Plots.plot(p1::SimpleIIPlayer, p2::SimpleIIPlayer; kwargs...)
-    L = length(p1.strategy)
-    labels = Matrix{String}(undef, 1, L)
-    for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
 
-    plt1 = Plots.plot(cumulative_strategies(p1), labels=labels; kwargs...)
+## extras
 
-    plt2 = Plots.plot(cumulative_strategies(p2), labels=""; kwargs...)
 
-    title!(plt1, "Player 1")
-    ylabel!(plt1, "Strategy Action Proportion")
-    title!(plt2, "Player 2")
-    plot(plt1, plt2, layout= @layout [a b])
-    xlabel!("Training Steps")
+@recipe function f(p1::SimpleIIPlayer, p2::SimpleIIPlayer)
+    layout --> 2
+    link := :both
+    framestyle := [:axes :axes]
+
+    xlabel := "Training Steps"
+
+    L1 = length(p1.strategy)
+    labels1 = Matrix{String}(undef, 1, L1)
+    for i in eachindex(labels1); labels1[i] = L"a_{%$(i)}"; end
+
+    @series begin
+        subplot := 1
+        ylabel := "Strategy"
+        title := "Player 1"
+        labels := labels1
+        cumulative_strategies(p1)
+    end
+
+    L2 = length(p2.strategy)
+    labels2 = Matrix{String}(undef, 1, L2)
+    for i in eachindex(labels2); labels2[i] = L"a_{%$(i)}"; end
+
+    @series begin
+        subplot := 2
+        title := "Player 2"
+        labels := labels2
+        cumulative_strategies(p2)
+    end
 end
 
-function Plots.plot(p::SimpleIIPlayer; kwargs...)
+@recipe function f(p::SimpleIIPlayer)
+
+    xlabel := "Training Steps"
+
     L = length(p.strategy)
     labels = Matrix{String}(undef, 1, L)
     for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
 
-    plt = Plots.plot(cumulative_strategies(p), labels=labels; kwargs...)
-
-    title!(plt, "Player 1")
-    ylabel!(plt, "Strategy Action Proportion")
-    xlabel!(plt, "Training Steps")
+    @series begin
+        subplot := 1
+        ylabel := "Strategy"
+        title := "Player 1"
+        labels := labels
+        cumulative_strategies(p)
+    end
 end

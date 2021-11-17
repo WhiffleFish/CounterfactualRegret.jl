@@ -1,5 +1,4 @@
 using StaticArrays
-using Combinatorics
 
 const PASS = 0
 const BET = 1
@@ -15,10 +14,10 @@ Base.:(==)(h1::Hist, h2::Hist) = h1.cards==h2.cards && h1.action_hist==h2.action
 Base.length(h::Hist) = length(h.action_hist)
 
 struct Kuhn <: Game{Hist, KuhnInfoKey}
-    cards::Vector{Vector{Int}}
+    cards::Vector{SVector{2,Int}}
 end
 
-Kuhn() = Kuhn(collect(permutations([1,2,3],2)))
+Kuhn() = Kuhn([SVector(i,j) for i in 1:3, j in 1:3 if i != j])
 
 # FIXME: lots of gc
 CounterfactualRegret.initialhist(::Kuhn) = Hist(SA[0,0], Int[])
@@ -71,11 +70,8 @@ function CounterfactualRegret.chance_action(game::Kuhn, h::Hist)
     return rand(game.cards)
 end
 
-function CounterfactualRegret.next_hist(::Kuhn, h, a::Vector{Int})
-    return Hist(
-        @SVector [a[i] for i in 1:2]
-        , h.action_hist
-    )
+function CounterfactualRegret.next_hist(::Kuhn, h, a::SVector{2,Int})
+    return Hist(a, h.action_hist)
 end
 
 # FIXME: lots of gc
@@ -96,7 +92,7 @@ CounterfactualRegret.actions(::Kuhn, h::Hist) = PASS:BET
 ## Extra
 import Base.print
 
-function Base.print(solver::AbstractCFRSolver{H,K,Kuhn,I}) where {H,K,I}
+function Base.print(solver::AbstractCFRSolver{H,K,G}) where {H,K,G<:Kuhn}
     println("\n\n")
     for (k,v) in solver.I
         h = k[3]

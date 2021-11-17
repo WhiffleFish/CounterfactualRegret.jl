@@ -215,15 +215,26 @@ function cumulative_strategies(I::AbstractInfoState)
     return mat
 end
 
-function Plots.plot(I::AbstractInfoState;kwargs...)
+
+## extras
+
+
+@recipe function f(I::AbstractInfoState)
+
+    xlabel := "Training Steps"
+
     L = length(I.σ)
     labels = Matrix{String}(undef, 1, L)
     for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
 
-    plt = Plots.plot(cumulative_strategies(I), labels=labels; kwargs...)
+    @series begin
+        subplot := 1
+        ylabel := "Strategy"
+        title := "Player 1"
+        labels := labels
+        cumulative_strategies(I)
+    end
 
-    ylabel!(plt, "Strategy Action Proportion")
-    xlabel!(plt, "Training Steps")
 end
 
 function Base.print(sol::AbstractCFRSolver)
