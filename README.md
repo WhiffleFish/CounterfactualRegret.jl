@@ -1,8 +1,8 @@
-# HelloCFR
+# CounterfactualRegret.jl
 
 ## Finding NE with Regret Matching
 ```julia
-using HelloCFR
+using CounterfactualRegret
 using Plots
 
 RPS = MatrixGame([

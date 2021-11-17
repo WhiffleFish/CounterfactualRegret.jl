@@ -1,23 +1,23 @@
 using Revise
-using HelloCFR
-using HelloCFR: IIEMatrixGame, Kuhn
+using CounterfactualRegret
+using CounterfactualRegret: IIEMatrixGame, Kuhn, SpaceGame
 
-game = Kuhn()
-sol = ESCFRSolver(game)
-train!(sol, 1_000)
-
-sol.I[(1,2,[0,1])]
-
-game = IIEMatrixGame([
-    (-1,-1) (-3,0);
-    (0,-3) (-2,-2)
-])
-
+game = SpaceGame(5,10)
 sol = ESCFRSolver(game;debug=true)
+
 train!(sol, 10_000)
 
 using Plots
-using Test
-plot(sol)
+V = collect(values(sol.I))
+V[9]
+plot(V[9])
+plot(sol.I[(2,6,2)])
 
-I0 = first(values(sol.I))
+
+sol.I[(2,4,1)]
+
+plot(reduce(hcat,sol.I[(2,8,1)].hist)')
+
+FullEvaluate(sol)
+
+print(sol)

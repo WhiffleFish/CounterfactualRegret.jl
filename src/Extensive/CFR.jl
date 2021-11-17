@@ -203,7 +203,7 @@ function FullEvaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
     return v_σ
 end
 
-function cumulative_strategies(I::DebugInfoState)
+function cumulative_strategies(I::AbstractInfoState)
     L = length(I.σ)
     mat = Matrix{Float64}(undef, length(I.hist), L)
     σ = zeros(Float64, L)
@@ -215,7 +215,7 @@ function cumulative_strategies(I::DebugInfoState)
     return mat
 end
 
-function Plots.plot(I::DebugInfoState;kwargs...)
+function Plots.plot(I::AbstractInfoState;kwargs...)
     L = length(I.σ)
     labels = Matrix{String}(undef, 1, L)
     for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
@@ -224,4 +224,12 @@ function Plots.plot(I::DebugInfoState;kwargs...)
 
     ylabel!(plt, "Strategy Action Proportion")
     xlabel!(plt, "Training Steps")
+end
+
+function Base.print(sol::AbstractCFRSolver)
+    for (k,I) in sol.I
+        σ = copy(I.s)
+        σ ./= sum(σ)
+        println(k,"\t",round.(σ, sigdigits=3))
+    end
 end

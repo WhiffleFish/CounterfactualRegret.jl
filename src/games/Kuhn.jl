@@ -21,23 +21,19 @@ end
 Kuhn() = Kuhn(collect(permutations([1,2,3],2)))
 
 # FIXME: lots of gc
-HelloCFR.initialhist(::Kuhn) = Hist(SA[0,0], Int[])
+CounterfactualRegret.initialhist(::Kuhn) = Hist(SA[0,0], Int[])
 
-function HelloCFR.isterminal(::Kuhn, h::Hist) # requires some sequence of actions
+function CounterfactualRegret.isterminal(::Kuhn, h::Hist) # requires some sequence of actions
     h = h.action_hist
     L = length(h)
     if L > 1
-        if h[1] == BET || h[2] == PASS || L > 2
-            return true
-        else
-            return false
-        end
+        return h[1] == BET || h[2] == PASS || L > 2
     else
         return false
     end
 end
 
-function HelloCFR.utility(::Kuhn, i::Int, h::Hist)
+function CounterfactualRegret.utility(::Kuhn, i::Int, h::Hist)
     as = h.action_hist
     cards = h.cards
     L = length(as)
@@ -57,7 +53,7 @@ function HelloCFR.utility(::Kuhn, i::Int, h::Hist)
     end
 end
 
-function HelloCFR.player(::Kuhn, h::Hist)
+function CounterfactualRegret.player(::Kuhn, h::Hist)
     if any(iszero, h.cards)
         return 0
     else
@@ -65,17 +61,17 @@ function HelloCFR.player(::Kuhn, h::Hist)
     end
 end
 
-HelloCFR.player(::Kuhn, k::KuhnInfoKey) = first(k)
+CounterfactualRegret.player(::Kuhn, k::KuhnInfoKey) = first(k)
 
-function HelloCFR.chance_actions(game::Kuhn, h::Hist)
+function CounterfactualRegret.chance_actions(game::Kuhn, h::Hist)
     return game.cards
 end
 
-function HelloCFR.chance_action(game::Kuhn, h::Hist)
+function CounterfactualRegret.chance_action(game::Kuhn, h::Hist)
     return rand(game.cards)
 end
 
-function HelloCFR.next_hist(::Kuhn, h, a::Vector{Int})
+function CounterfactualRegret.next_hist(::Kuhn, h, a::Vector{Int})
     return Hist(
         @SVector [a[i] for i in 1:2]
         , h.action_hist
@@ -83,18 +79,18 @@ function HelloCFR.next_hist(::Kuhn, h, a::Vector{Int})
 end
 
 # FIXME: lots of gc
-function HelloCFR.next_hist(::Kuhn, h::Hist, a::Int)
+function CounterfactualRegret.next_hist(::Kuhn, h::Hist, a::Int)
     return Hist(h.cards, [h.action_hist;a])
 end
 
 
-function HelloCFR.infokey(g::Kuhn, h::Hist)
+function CounterfactualRegret.infokey(g::Kuhn, h::Hist)
     p = player(g,h)
     card = p > 0 ? h.cards[p] : 0
     return (p, card, h.action_hist) # [player, player_card, action_hist]
 end
 
-HelloCFR.actions(::Kuhn, h::Hist) = PASS:BET
+CounterfactualRegret.actions(::Kuhn, h::Hist) = PASS:BET
 
 
 ## Extra

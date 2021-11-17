@@ -13,23 +13,23 @@ IIEMatrixGame() = IIEMatrixGame([
     (-1,1) (1,-1) (0,0)
 ])
 
-HelloCFR.initialhist(::IIEMatrixGame) = Int[]
+CounterfactualRegret.initialhist(::IIEMatrixGame) = Int[]
 
-HelloCFR.isterminal(::IIEMatrixGame, h::MAT_HIST) = length(h) > 1
+CounterfactualRegret.isterminal(::IIEMatrixGame, h::MAT_HIST) = length(h) > 1
 
-function HelloCFR.utility(game::IIEMatrixGame, i::Int, h::MAT_HIST)
+function CounterfactualRegret.utility(game::IIEMatrixGame, i::Int, h::MAT_HIST)
     length(h) > 1 ? game.R[h[1], h[2]][i] : 0
 end
 
-HelloCFR.player(::IIEMatrixGame, h::MAT_HIST) = length(h)+1
+CounterfactualRegret.player(::IIEMatrixGame, h::MAT_HIST) = length(h)+1
 
-HelloCFR.player(::IIEMatrixGame, k::MAT_INFO_KEY) = k+1
+CounterfactualRegret.player(::IIEMatrixGame, k::MAT_INFO_KEY) = k+1
 
-HelloCFR.next_hist(::IIEMatrixGame, h, a) = [h;a]
+CounterfactualRegret.next_hist(::IIEMatrixGame, h, a) = [h;a]
 
-HelloCFR.infokey(::IIEMatrixGame, h) = length(h)
+CounterfactualRegret.infokey(::IIEMatrixGame, h) = length(h)
 
-function HelloCFR.actions(game::IIEMatrixGame, h::MAT_HIST)
+function CounterfactualRegret.actions(game::IIEMatrixGame, h::MAT_HIST)
     length(h) == 0 ? (1:size(game.R,1)) : (1:size(game.R,2))
 end
 

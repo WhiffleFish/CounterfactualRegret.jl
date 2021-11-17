@@ -1,9 +1,7 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
-HelloCFR = "9fefe0b7-a0d5-4e12-a8ed-3472cccdfc49"
+CounterfactualRegret = "9fefe0b7-a0d5-4e12-a8ed-3472cccdfc49"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
-JETTest = "a79fb612-4a80-4749-a9bd-c2faab13da61"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"

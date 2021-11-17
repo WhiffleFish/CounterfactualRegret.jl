@@ -1,4 +1,4 @@
-using HelloCFR
+using CounterfactualRegret
 using Plots
 
 game = SimpleIIGame([

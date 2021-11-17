@@ -1,4 +1,4 @@
-using HelloCFR
+using CounterfactualRegret
 
 game = SpaceGame(5,10)
 

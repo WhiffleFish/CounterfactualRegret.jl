@@ -1,4 +1,4 @@
-module HelloCFR
+module CounterfactualRegret
 
 include(joinpath("Matrix", "MatrixGames.jl"))
 export MatrixGame, MatrixPlayer, clear!, train_both!, train_one!
@@ -22,8 +22,11 @@ include(joinpath("Extensive", "DCFR.jl"))
 export CFRSolver, CSCFRSolver, DCFRSolver, ESCFRSolver
 export train!, FullEvaluate, MonteCarloEvaluate
 
+
+# Miscellaneous Games
 include(joinpath("Games", "Extensive2Matrix.jl"))
 include(joinpath("Games", "IIEMatrix.jl"))
 include(joinpath("Games", "Kuhn.jl"))
+include(joinpath("Games", "SpaceGame.jl"))
 
 end # module

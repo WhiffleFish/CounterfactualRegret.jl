@@ -1,6 +1,6 @@
 using Plots
-using HelloCFR
-using HelloCFR: Kuhn, IIEMatrixGame
+using CounterfactualRegret
+using CounterfactualRegret: Kuhn, IIEMatrixGame
 
 game = IIEMatrixGame([
     (1,1) (0,0) (0,0);

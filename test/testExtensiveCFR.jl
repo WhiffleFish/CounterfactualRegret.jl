@@ -1,5 +1,5 @@
-using HelloCFR
-using HelloCFR: IIEMatrixGame, Kuhn
+using CounterfactualRegret
+using CounterfactualRegret: IIEMatrixGame, Kuhn
 using Test
 
 function CFRMatrixTest(sol_type, N::Int)
@@ -41,7 +41,7 @@ function CFRMatrixTest(sol_type, N::Int)
         @test all( .≈(MC_eval,(-2,-2), atol=0.01))
 
     # https://sites.math.northwestern.edu/~clark/364/handouts/bimatrix-mixed.pdf
-    game = HelloCFR.IIEMatrixGame([
+    game = CounterfactualRegret.IIEMatrixGame([
         (1,1) (0,0) (0,0);
         (0,0) (0,2) (3,0);
         (0,0) (2,0) (0,3);
@@ -137,5 +137,5 @@ end
     @testset "DCFR Kuhn" begin CFRKuhnTest(DCFRSolver, 200_000, 0.01) end
 
     @testset "ESCFR Matrix" begin CFRMatrixTest(ESCFRSolver, 500_000) end
-    @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_500_000, 0.01) end
+    @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_000_000, 0.02) end
 end

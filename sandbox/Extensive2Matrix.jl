@@ -1,10 +1,10 @@
-using HelloCFR
+using CounterfactualRegret
 
-game = HelloCFR.Kuhn()
+game = CounterfactualRegret.Kuhn()
 
 mat = Matrix(game)
 
-g = HelloCFR.IIEMatrixGame()
+g = CounterfactualRegret.IIEMatrixGame()
 Matrix(g)
 
 
@@ -16,10 +16,10 @@ train!(solver, 1)
 
 solver.I
 
-HelloCFR.pure_strategies(solver, 2)
+CounterfactualRegret.pure_strategies(solver, 2)
 
-infodict(sol::HelloCFR.AbstractCFRSolver{H,K,G,I}) where {H,K,G,I} = sol.I::Dict{K,I}
-strategy(I::HelloCFR.AbstractInfoState) = I.σ::Vector{Float64}
+infodict(sol::CounterfactualRegret.AbstractCFRSolver{H,K,G,I}) where {H,K,G,I} = sol.I::Dict{K,I}
+strategy(I::CounterfactualRegret.AbstractInfoState) = I.σ::Vector{Float64}
 
 # return [s1, s2, s3, ...]
 # sk : [(k1 => σ1), (k2 => σ2), ...]
@@ -88,7 +88,7 @@ train_both!(p1,p2, 1_000)
 using Plots
 plot(p1)
 
-g2 = HelloCFR.IIEMatrixGame(mat)
+g2 = CounterfactualRegret.IIEMatrixGame(mat)
 solver = CFRSolver(g2; debug=true)
 train!(solver, 800_000)
 plot(solver)

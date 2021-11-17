@@ -1,6 +1,6 @@
 using StaticArrays
 
-const SpaceGameInfoState = Tuple{Int,Int} # (time, player)
+const SpaceGameInfoState = NTuple{3,Int} # (player, time, budget)
 
 struct SpaceGameHist
     p::Int # current player
@@ -17,20 +17,22 @@ struct SpaceGame <: Game{SpaceGameHist, SpaceGameInfoState}
     T::Int # Max simulation time steps
 end
 
-HelloCFR.player(::SpaceGame, h::SpaceGameHist) = h.p
+CounterfactualRegret.player(::SpaceGame, h::SpaceGameHist) = h.p
 
-HelloCFR.actions(::SpaceGame, h::SpaceGameHist) = SA[:wait, :act]
+CounterfactualRegret.actions(::SpaceGame, h::SpaceGameHist) = SA[:wait, :act]
 
 function score(g::SpaceGame, h::SpaceGameHist, a)
+    dist_from_origin = min(h.t, g.T+1-h.t)
+    s = g.T+1 - dist_from_origin
     if h.mode_change
-        return a == :act ? 1 : -1
+        return a == :act ? s : -s
     else
         return 0
     end
 end
 
 
-function HelloCFR.next_hist(g::SpaceGame, h::SpaceGameHist , a)
+function CounterfactualRegret.next_hist(g::SpaceGame, h::SpaceGameHist , a)
     if player(g,h) == 1
         return SpaceGameHist(2, h.t, h.score, h.budget, a == :act)
     else
@@ -42,10 +44,10 @@ function HelloCFR.next_hist(g::SpaceGame, h::SpaceGameHist , a)
     end
 end
 
-HelloCFR.isterminal(g::SpaceGame, h::SpaceGameHist) = h.t ≥ g.T || h.budget == 0
+CounterfactualRegret.isterminal(g::SpaceGame, h::SpaceGameHist) = h.t ≥ g.T || h.budget == 0
 
-HelloCFR.initialhist(g::SpaceGame) = SpaceGameHist(1, 0, 0, g.budget, false)
+CounterfactualRegret.initialhist(g::SpaceGame) = SpaceGameHist(1, 0, 0, g.budget, false)
 
-HelloCFR.utility(::SpaceGame, i::Int, h::SpaceGameHist) = i == 2 ? h.score : -h.score
+CounterfactualRegret.utility(::SpaceGame, i::Int, h::SpaceGameHist) = i == 2 ? h.score : -h.score
 
-HelloCFR.infokey(::SpaceGame, h::SpaceGameHist) = (h.p, h.t)
+CounterfactualRegret.infokey(::SpaceGame, h::SpaceGameHist) = (h.p, h.t, h.p===2 ? h.budget : 0)

@@ -1,4 +1,4 @@
-using HelloCFR, Plots
+using CounterfactualRegret, Plots
 using Test
 
 include(joinpath(@__DIR__, "testMatrix.jl"))

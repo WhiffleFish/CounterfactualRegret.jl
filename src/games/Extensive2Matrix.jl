@@ -1,6 +1,9 @@
+#=
+Convert extensive form to matrix form
+=#
 
-infodict(sol::HelloCFR.AbstractCFRSolver{H,K,G,I}) where {H,K,G,I} = sol.I::Dict{K,I}
-strategy(I::HelloCFR.AbstractInfoState) = I.σ::Vector{Float64}
+infodict(sol::AbstractCFRSolver{H,K,G,I}) where {H,K,G,I} = sol.I::Dict{K,I}
+strategy(I::AbstractInfoState) = I.σ::Vector{Float64}
 
 function pure_strategies(sol::CFRSolver, p::Int)
     game = sol.game
