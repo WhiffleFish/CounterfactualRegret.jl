@@ -231,6 +231,6 @@ function Base.print(sol::AbstractCFRSolver)
     for (k,I) in sol.I
         σ = copy(I.s)
         σ ./= sum(σ)
-        println(k,"\t",round.(σ, sigdigits=3))
+        println(k,"\t",round.(σ, digits=3))
     end
 end

@@ -21,9 +21,9 @@ CounterfactualRegret.player(::SpaceGame, h::SpaceGameHist) = h.p
 
 CounterfactualRegret.actions(::SpaceGame, h::SpaceGameHist) = SA[:wait, :act]
 
-function score(g::SpaceGame, h::SpaceGameHist, a)
+function score(g::SpaceGame, h::SpaceGameHist, a::Symbol)
     dist_from_origin = min(h.t, g.T+1-h.t)
-    s = g.T+1 - dist_from_origin
+    s = (g.T+1)÷2 - dist_from_origin
     if h.mode_change
         return a == :act ? s : -s
     else
@@ -32,7 +32,7 @@ function score(g::SpaceGame, h::SpaceGameHist, a)
 end
 
 
-function CounterfactualRegret.next_hist(g::SpaceGame, h::SpaceGameHist , a)
+function CounterfactualRegret.next_hist(g::SpaceGame, h::SpaceGameHist , a::Symbol)
     if player(g,h) == 1
         return SpaceGameHist(2, h.t, h.score, h.budget, a == :act)
     else
@@ -40,7 +40,7 @@ function CounterfactualRegret.next_hist(g::SpaceGame, h::SpaceGameHist , a)
         budget = h.budget
         a == :act && (budget -= 1)
         budget == 0 && (s -= (g.T - (h.t+1)))
-        return SpaceGameHist(1, h.t+1, s, budget, false)
+        return SpaceGameHist(1, h.t+1, h.score + s, budget, false)
     end
 end
 
