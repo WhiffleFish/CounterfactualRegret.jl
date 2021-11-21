@@ -5,7 +5,7 @@ const SpaceGameInfoState = NTuple{3,Int} # (player, time, budget)
 struct SpaceGameHist
     p::Int # current player
     t::Int # current time step
-    score::Int # score dependent on terminal history is clunky here
+    score::Float64 # score dependent on terminal history is clunky here
     budget::Int # How many more times can ground station scan
     mode_change::Bool # Did sat mode change on last turn
 end
@@ -21,9 +21,12 @@ CounterfactualRegret.player(::SpaceGame, h::SpaceGameHist) = h.p
 
 CounterfactualRegret.actions(::SpaceGame, h::SpaceGameHist) = SA[:wait, :act]
 
+
+cardioid(θ,a=1) = 2a*(1-cos(θ))
+
 function score(g::SpaceGame, h::SpaceGameHist, a::Symbol)
-    dist_from_origin = min(h.t, g.T+1-h.t)
-    s = (g.T+1)÷2 - dist_from_origin
+    θ = 2π*(h.t/g.T)
+    s = cardioid(θ)
     if h.mode_change
         return a == :act ? s : -s
     else
