@@ -1,4 +1,4 @@
-using CounterfactualRegret, Plots
+using CounterfactualRegret
 using Test
 
 include(joinpath(@__DIR__, "testMatrix.jl"))
