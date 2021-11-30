@@ -167,6 +167,8 @@ function fill_normed_regret!(v::Vector{Float64}, r::Vector)
         if k > 0
             s += k
             v[i] = k
+        else
+            v[i] = 0.0
         end
     end
     if s == 0
