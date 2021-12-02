@@ -210,7 +210,8 @@ function evaluate(p1::MatrixPlayer, p2::MatrixPlayer)
     return p1_eval, p2_eval
 end
 
-function train_both!(p1::MatrixPlayer, p2::MatrixPlayer, N::Int)
+function train_both!(p1::MatrixPlayer, p2::MatrixPlayer, N::Int; show_progress::Bool=false)
+    prog = Progress(N; enabled=show_progress)
     for i in 1:N
         a1, a2 = gen_action(p1), gen_action(p2)
 
@@ -219,18 +220,22 @@ function train_both!(p1::MatrixPlayer, p2::MatrixPlayer, N::Int)
 
         update_strategy!(p1)
         update_strategy!(p2)
+
+        next!(prog)
     end
     finalize_strategy!(p1)
     finalize_strategy!(p2)
 end
 
-function train_one!(p1::MatrixPlayer, p2::MatrixPlayer, N::Int)
+function train_one!(p1::MatrixPlayer, p2::MatrixPlayer, N::Int; show_progress::Bool=false)
+    prog = Progress(N; enabled=show_progress)
     for i in 1:N
         a1, a2 = gen_action(p1), gen_action(p2)
 
         update_regret!(p1, a1, a2)
 
         update_strategy!(p1)
+        next!(prog)
     end
     finalize_strategy!(p1)
 end

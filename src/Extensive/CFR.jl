@@ -112,8 +112,9 @@ function CFR(solver::CFRSolver, h, i, t, π_1, π_2)
     return v_σ
 end
 
-function train!(solver::REG_CFRSOLVER, N::Int)
+function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false)
     ih = initialhist(solver.game)
+    prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:2
             CFR(solver, ih, i, t, 1.0, 1.0)
@@ -121,11 +122,13 @@ function train!(solver::REG_CFRSOLVER, N::Int)
         for I in values(solver.I)
             regret_match!(I)
         end
+        next!(prog)
     end
 end
 
-function train!(solver::DEBUG_CFRSOLVER, N::Int)
+function train!(solver::DEBUG_CFRSOLVER, N::Int; show_progress::Bool=false)
     ih = initialhist(solver.game)
+    prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:2
             CFR(solver, ih, i, t, 1.0, 1.0)
@@ -134,6 +137,7 @@ function train!(solver::DEBUG_CFRSOLVER, N::Int)
             regret_match!(I)
             push!(I.hist, copy(I.s) ./ sum(I.s))
         end
+        next!(prog)
     end
 end
 

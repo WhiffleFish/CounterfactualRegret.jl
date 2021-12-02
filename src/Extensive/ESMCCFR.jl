@@ -113,8 +113,9 @@ function CFR(solver::ESCFRSolver, h, i, t, π_1, π_2)
     return v_σ
 end
 
-function train!(solver::ESCFRSolver{K,G,INFO}, N::Int) where {K,G,INFO<:MCInfoState}
+function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false) where {K,G,INFO<:MCInfoState}
     ih = initialhist(solver.game)
+    prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:2
             CFR(solver, ih, i, t, 1.0, 1.0)
@@ -123,11 +124,13 @@ function train!(solver::ESCFRSolver{K,G,INFO}, N::Int) where {K,G,INFO<:MCInfoSt
             regret_match!(I)
             I.a_idx = 0
         end
+        next!(prog)
     end
 end
 
-function train!(solver::ESCFRSolver{K,G,INFO}, N::Int) where {K,G,INFO<:DebugMCInfoState}
+function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false) where {K,G,INFO<:DebugMCInfoState}
     ih = initialhist(solver.game)
+    prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:2
             CFR(solver, ih, i, t, 1.0, 1.0)
@@ -137,5 +140,6 @@ function train!(solver::ESCFRSolver{K,G,INFO}, N::Int) where {K,G,INFO<:DebugMCI
             push!(I.hist, copy(I.s) ./ sum(I.s))
             I.a_idx = 0
         end
+        next!(prog)
     end
 end

@@ -265,26 +265,33 @@ function update_strategies!(game::SimpleIIGame, Is::NTuple{2,SimpleIIInfoState},
     return σ1, σ2
 end
 
-function train_both!(p1::SimpleIIPlayer, p2::SimpleIIPlayer, N::Int; progress::Bool=false)
+function train_both!(p1::SimpleIIPlayer, p2::SimpleIIPlayer, N::Int; show_progress::Bool=false)
     game = p1.game
     I1 = SimpleInfoState(game, 1)
     I2 = SimpleInfoState(game, 2)
     L1 = length(p1.hist)
     L2 = length(p2.hist)
 
-    @showprogress enabled=!progress for i in 1:N
+    prog = Progress(N; enabled=show_progress)
+    for i in 1:N
         update_strategies!(game, (I1,I2), p1, p2)
+        next!(prog)
     end
+
     finalize_strategy!(p1)
     finalize_strategy!(p2)
     return p1, p2
 end
 
-function train_one!(p1::SimpleIIPlayer, p2::SimpleIIPlayer, N::Int; progress::Bool=false)
+function train_one!(p1::SimpleIIPlayer, p2::SimpleIIPlayer, N::Int; show_progress::Bool=false)
     I = SimpleInfoState(p1.game, 1)
-    @showprogress enabled=!progress for i in 1:N
+
+    prog = Progress(N; enabled=show_progress)
+    for i in 1:N
         update_strategy!(p1.game, I, p1, p2)
+        next!(prog)
     end
+
     finalize_strategy!(p1)
     return p1
 end
