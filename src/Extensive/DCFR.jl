@@ -41,7 +41,7 @@ function CFR(solver::DCFRSolver, h, i, t, π_1, π_2)
     A = actions(game, h)
 
     v_σ = 0.0
-    v_σ_Ia = zeros(Float64, length(A))
+    v_σ_Ia = I._tmp_σ
 
     for (k,a) in enumerate(A)
         h′ = next_hist(game, h, a)

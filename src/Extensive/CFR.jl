@@ -6,12 +6,23 @@ struct InfoState <: AbstractInfoState
     σ::Vector{Float64}
     r::Vector{Float64}
     s::Vector{Float64}
+    _tmp_σ::Vector{Float64}
+end
+
+function InfoState(L::Int)
+    return InfoState(
+        fill(1/L, L),
+        zeros(L),
+        fill(1/L, L),
+        fill(1/L, L),
+    )
 end
 
 struct DebugInfoState <: AbstractInfoState
     σ::Vector{Float64}
     r::Vector{Float64}
     s::Vector{Float64}
+    _tmp_σ::Vector{Float64}
     hist::Vector{Vector{Float64}}
 end
 
@@ -20,15 +31,8 @@ function DebugInfoState(L::Int)
         fill(1/L, L),
         zeros(L),
         fill(1/L, L),
+        fill(1/L, L),
         Vector{Float64}[]
-    )
-end
-
-function InfoState(L::Int)
-    return InfoState(
-        fill(1/L, L),
-        zeros(L),
-        fill(1/L, L),
     )
 end
 
@@ -88,7 +92,7 @@ function CFR(solver::CFRSolver, h, i, t, π_1, π_2)
     A = actions(game, h)
 
     v_σ = 0.0
-    v_σ_Ia = zeros(Float64, length(A))
+    v_σ_Ia = I._tmp_σ
 
     for (k,a) in enumerate(A)
         h′ = next_hist(game, h, a)
