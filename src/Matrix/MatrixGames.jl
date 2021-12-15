@@ -120,12 +120,6 @@ function MatrixPlayer(game::MatrixGame, id::Int, strategy::Vector{Float64})
     )
 end
 
-function joint_hist(p1::MatrixPlayer, p2::MatrixPlayer)
-    L = length(p1_hist)
-    @assert length(p1_hist) == length(p2_hist)
-    return [(p1.hist[i], p2.hist[i]) for i in 1:L]
-end
-
 function regret(game::MatrixGame, i::Int, a1::Int, a2::Int)
     u = game.R[a1,a2][i]
     if i === 1
@@ -181,8 +175,10 @@ end
 function update_strategy!(p::MatrixPlayer)
     fill_normed_regret!(p.strategy, p.regret_sum)
     σ = p.strategy
-    push!(p.hist, copy(σ))
     p.strat_sum .+= σ
+    s = copy(p.strat_sum)
+    s ./= sum(s)
+    push!(p.hist, s)
 end
 
 function finalize_strategy!(p::MatrixPlayer)
@@ -267,7 +263,7 @@ end
         ylabel := "Strategy"
         title := "Player 1"
         labels := labels1
-        cumulative_strategies(p1)
+        reduce(hcat,p1.hist)'
     end
 
     L2 = length(p2.strategy)
@@ -278,7 +274,7 @@ end
         subplot := 2
         title := "Player 2"
         labels := labels2
-        cumulative_strategies(p2)
+        reduce(hcat,p2.hist)'
     end
 end
 
