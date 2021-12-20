@@ -7,6 +7,17 @@ struct CSCFRSolver{K,G,I} <: AbstractCFRSolver{K,G,I}
     game::G
 end
 
+
+"""
+    `CSCFRSolver(game::Game{H,K}; debug::Bool=false)`
+
+Instantiate chance sampling CFR solver with some `game`.
+
+If `debug=true`, record history of strategies over training period, allowing
+for training history of individual information states to be plotted with
+`Plots.plot(is::DebugInfoState)`
+
+"""
 function CSCFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
     if debug
         return CSCFRSolver(Dict{K, DebugInfoState}(), game)

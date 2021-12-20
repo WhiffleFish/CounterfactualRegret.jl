@@ -41,6 +41,16 @@ struct CFRSolver{K,G,I} <: AbstractCFRSolver{K,G,I}
     game::G
 end
 
+"""
+    `CFRSolver(game::Game{H,K}; debug::Bool=false)`
+
+Instantiate vanilla CFR solver with some `game`.
+
+If `debug=true`, record history of strategies over training period, allowing
+for training history of individual information states to be plotted with
+`Plots.plot(is::DebugInfoState)`
+
+"""
 function CFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
     if debug
         return CFRSolver(Dict{K, DebugInfoState}(), game)

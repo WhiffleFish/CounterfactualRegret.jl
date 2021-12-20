@@ -39,7 +39,7 @@ end
 
 import Base.print
 
-function Base.print(solver::AbstractCFRSolver{H,K,G}) where {H,K,G<:IIEMatrixGame}
+function Base.print(solver::AbstractCFRSolver{K,G}) where {K,G<:IIEMatrixGame}
     println("\n")
     for (k,v) in solver.I
         σ = copy(v.s)
@@ -61,7 +61,7 @@ function cumulative_strategies(hist::Vector{Vector{Float64}})
     return mat
 end
 
-@recipe function f(sol::AbstractCFRSolver{H,K,G}) where {H,K,G <: IIEMatrixGame}
+@recipe function f(sol::AbstractCFRSolver{K,G}) where {K,G <: IIEMatrixGame}
     layout --> 2
     link := :both
     framestyle := [:axes :axes]

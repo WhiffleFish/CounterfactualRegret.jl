@@ -65,6 +65,17 @@ end
 
 Random.rand(I::AbstractInfoState) = rand(Random.GLOBAL_RNG, I)
 
+
+"""
+    `ESCFRSolver(game::Game{H,K}; debug::Bool=false)`
+
+Instantiate external sampling CFR solver with some `game`.
+
+If `debug=true`, record history of strategies over training period, allowing
+for training history of individual information states to be plotted with
+`Plots.plot(is::DebugInfoState)`
+
+"""
 function ESCFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
     if debug
         return ESCFRSolver(Dict{K, DebugMCInfoState}(), game)

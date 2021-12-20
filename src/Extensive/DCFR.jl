@@ -7,8 +7,20 @@ struct DCFRSolver{K,G,I} <: AbstractCFRSolver{K,G,I}
 end
 
 """
-Default to LCFR
+    `DCFRSolver(game::Game{H,K}; debug::Bool=false)`
+
+- α - positive regret discount factor
+- β - negative regret discount factor
+- γ - strategy discount factor
+
+Default to LCFR (linear)
     α = β = γ = 1.0
+
+Instantiate discounted CFR solver with some `game`.
+
+If `debug=true`, record history of strategies over training period, allowing
+for training history of individual information states to be plotted with
+`Plots.plot(is::DebugInfoState)`
 """
 function DCFRSolver(
         game::Game{H,K};

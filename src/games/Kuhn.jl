@@ -92,8 +92,8 @@ CounterfactualRegret.actions(::Kuhn, h::Hist) = PASS:BET
 ## Extra
 import Base.print
 
-function Base.print(solver::AbstractCFRSolver{H,K,G}) where {H,K,G<:Kuhn}
-    println("\n\n")
+function Base.print(solver::AbstractCFRSolver{K,G}) where {K,G<:Kuhn}
+    println("")
     for (k,v) in solver.I
         h = k[3]
         h_str = rpad(join(h),3,"_")
