@@ -10,7 +10,7 @@
 ## Finding Kuhn Poker Nash Equilibrium with CFR
 [Kuhn Poker Implementation](src/games/Kuhn.jl)
 
-```julia-repl
+```julia
 julia> using CounterfactualRegret: Kuhn
 
 julia> using CounterfactualRegret
