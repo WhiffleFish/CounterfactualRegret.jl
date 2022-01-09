@@ -10,7 +10,7 @@ export SimpleIIGame, SimpleIIPlayer
 
 
 include(joinpath("Extensive", "ExtensiveGames.jl"))
-export Game, initialhist, isterminal, u, player, next_hist, infokey, actions
+export Game, initialhist, isterminal, utility, player, next_hist, infokey, actions
 export chance_action, chance_actions, other_player
 export infokeytype, histtype
 
