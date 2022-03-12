@@ -2,16 +2,23 @@ using StaticArrays
 
 const PASS = 0
 const BET = 1
-const KuhnInfoKey = Tuple{Int, Int, Vector{Int}} # [player, player_card, action_hist]
+const KuhnInfoKey = Tuple{Int, Int, SVector{3,Int}} # [player, player_card, action_hist]
 
 struct Hist
     cards::SVector{2,Int}
-    action_hist::Vector{Int}
+    action_hist::SVector{3,Int}
 end
 
 Base.:(==)(h1::Hist, h2::Hist) = h1.cards==h2.cards && h1.action_hist==h2.action_hist
 
-Base.length(h::Hist) = length(h.action_hist)
+function Base.length(h::Hist)
+    l = 0
+    for a in h.action_hist
+        a === -1 && break
+        l += 1
+    end
+    return l
+end
 
 struct Kuhn <: Game{Hist, KuhnInfoKey}
     cards::Vector{SVector{2,Int}}
@@ -19,12 +26,11 @@ end
 
 Kuhn() = Kuhn([SVector(i,j) for i in 1:3, j in 1:3 if i != j])
 
-# FIXME: lots of gc
-CounterfactualRegret.initialhist(::Kuhn) = Hist(SA[0,0], Int[])
+CounterfactualRegret.initialhist(::Kuhn) = Hist(SA[0,0], SA[-1,-1,-1])
 
 function CounterfactualRegret.isterminal(::Kuhn, h::Hist) # requires some sequence of actions
-    h = h.action_hist
     L = length(h)
+    h = h.action_hist
     if L > 1
         return h[1] == BET || h[2] == PASS || L > 2
     else
@@ -37,15 +43,15 @@ function CounterfactualRegret.utility(::Kuhn, i::Int, h::Hist)
     cards = h.cards
     L = length(as)
     has_higher_card = cards[i] > cards[other_player(i)]
-    if as == SA[PASS, PASS]
+    if as == SA[PASS, PASS, -1]
         return has_higher_card ? 1 : -1
     elseif as == SA[PASS, BET, PASS]
         return i==2 ? 1 : -1
     elseif as == SA[PASS, BET, BET]
         return has_higher_card ? 2 : -2
-    elseif as == SA[BET, PASS]
+    elseif as == SA[BET, PASS, -1]
         return i==1 ? 1 : -1
-    elseif as == SA[BET, BET]
+    elseif as == SA[BET, BET, -1]
         return has_higher_card ? 2 : -2
     else
         return 0
@@ -74,9 +80,10 @@ function CounterfactualRegret.next_hist(::Kuhn, h, a::SVector{2,Int})
     return Hist(a, h.action_hist)
 end
 
-# FIXME: lots of gc
 function CounterfactualRegret.next_hist(::Kuhn, h::Hist, a::Int)
-    return Hist(h.cards, [h.action_hist;a])
+    L = length(h)
+    action_hist = setindex(h.action_hist, a, L+1)
+    return Hist(h.cards, action_hist)
 end
 
 
