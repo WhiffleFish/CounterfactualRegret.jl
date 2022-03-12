@@ -129,7 +129,7 @@ end
     @testset "CFR Kuhn" begin CFRKuhnTest(CFRSolver, 100_000, 0.03) end
 
     @testset "CSCFR Matrix" begin CFRMatrixTest(CSCFRSolver, 100_000) end
-    @testset "CSCFR Kuhn" begin CFRKuhnTest(CSCFRSolver, 500_000, 0.03) end
+    @testset "CSCFR Kuhn" begin CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03) end
 
     @testset "DCFR Matrix" begin CFRMatrixTest(DCFRSolver, 100_000) end
     @testset "DCFR Kuhn" begin CFRKuhnTest(DCFRSolver, 200_000, 0.03) end
