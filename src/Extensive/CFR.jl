@@ -85,6 +85,12 @@ function regret_match!(I::AbstractInfoState)
     s > 0 ? (σ ./= s) : fill!(σ,1/length(σ))
 end
 
+function regret_match!(sol::AbstractCFRSolver)
+    for I in values(sol.I)
+        regret_match!(I)
+    end
+end
+
 function CFR(solver::CFRSolver, h, i, t, π_1, π_2)
     game = solver.game
     if isterminal(game, h)
@@ -127,6 +133,7 @@ function CFR(solver::CFRSolver, h, i, t, π_1, π_2)
 end
 
 function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false)
+    regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
@@ -138,9 +145,11 @@ function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false)
         end
         next!(prog)
     end
+    finalize_strategies!(solver)
 end
 
 function train!(solver::DEBUG_CFRSOLVER, N::Int; show_progress::Bool=false)
+    regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
@@ -153,6 +162,7 @@ function train!(solver::DEBUG_CFRSOLVER, N::Int; show_progress::Bool=false)
         end
         next!(prog)
     end
+    finalize_strategies!(solver)
 end
 
 function finalize_strategies!(solver::AbstractCFRSolver)
@@ -163,67 +173,9 @@ function finalize_strategies!(solver::AbstractCFRSolver)
     end
 end
 
-"""
-    `FullEvaluate(solver::AbstractCFRSolver)`
-
-Evaluate full tree traversed by CFR solver. \n
-Returns tuple corresponding to utilities for both players.
-"""
-function FullEvaluate(solver::AbstractCFRSolver)
-    finalize_strategies!(solver)
-
-    ih = initialhist(solver.game)
-
-    p1_eval = FullEvaluate(solver, ih, 1, 0, 1.0, 1.0)
-    p2_eval = FullEvaluate(solver, ih, 2, 0, 1.0, 1.0)
-
-    return (p1_eval, p2_eval)
+function strategy(sol::AbstractCFRSolver{K}, I::K) where K
+    return strategy(sol.I[I])
 end
-
-function FullEvaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
-    game = solver.game
-    if isterminal(game, h)
-        return utility(game, i, h)
-    elseif player(game, h) === 0 # chance player
-        A = chance_actions(game, h)
-        s = 0.0
-        for a in A
-            s += FullEvaluate(solver, next_hist(game, h, a), i, t, π_1, π_2)
-        end
-        return s / length(A)
-    end
-
-    I = infoset(solver, h)
-    A = actions(game, h)
-
-    v_σ = 0.0
-
-    for (k,a) in enumerate(A)
-        v_σ_Ia = 0.0
-        h′ = next_hist(game, h, a)
-        if player(game, h) === 1
-            v_σ_Ia = FullEvaluate(solver, h′, i, t, I.σ[k]*π_1, π_2)
-        else
-            v_σ_Ia = FullEvaluate(solver, h′, i, t, π_1, I.σ[k]*π_2)
-        end
-        v_σ += I.σ[k]*v_σ_Ia
-    end
-
-    return v_σ
-end
-
-function cumulative_strategies(I::AbstractInfoState)
-    L = length(I.σ)
-    mat = Matrix{Float64}(undef, length(I.hist), L)
-    σ = zeros(Float64, L)
-
-    for (i,σ_i) in enumerate(I.hist)
-        σ = σ + (σ_i - σ)/i
-        mat[i,:] .= σ
-    end
-    return mat
-end
-
 
 ## extras
 
@@ -245,10 +197,10 @@ end
 
 end
 
-function Base.print(sol::AbstractCFRSolver)
+function Base.print(io::IO, sol::AbstractCFRSolver)
     for (k,I) in sol.I
         σ = copy(I.s)
         σ ./= sum(σ)
-        println(k,"\t",round.(σ, digits=3))
+        println(io, k,"\t",round.(σ, digits=3))
     end
 end

@@ -9,8 +9,6 @@ struct Hist
     action_hist::SVector{3,Int}
 end
 
-Base.:(==)(h1::Hist, h2::Hist) = h1.cards==h2.cards && h1.action_hist==h2.action_hist
-
 function Base.length(h::Hist)
     l = 0
     for a in h.action_hist
@@ -97,16 +95,15 @@ CounterfactualRegret.actions(::Kuhn, h::Hist) = PASS:BET
 
 
 ## Extra
-import Base.print
 
-function Base.print(solver::AbstractCFRSolver{K,G}) where {K,G<:Kuhn}
-    println("")
+function Base.print(io::IO, solver::AbstractCFRSolver{K,G}) where {K,G<:Kuhn}
+    println(io)
     for (k,v) in solver.I
         h = k[3]
         h_str = rpad(join(h),3,"_")
         σ = copy(v.s)
         σ ./= sum(σ)
         σ = round.(σ, digits=3)
-        println("Player: $(k[1]) \t Card: $(k[2]) \t h: $(join(h_str)) \t σ: $σ")
+        println(io, "Player: $(k[1]) \t Card: $(k[2]) \t h: $(join(h_str)) \t σ: $σ")
     end
 end

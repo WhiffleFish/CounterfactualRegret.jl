@@ -22,6 +22,8 @@ include(joinpath("Extensive", "DCFR.jl"))
 export CFRSolver, CSCFRSolver, DCFRSolver, ESCFRSolver
 export train!, FullEvaluate, MonteCarloEvaluate
 
+include(joinpath("Extensive", "evaluation.jl"))
+export FullEvaluate, MonteCarloEvaluate
 
 # Miscellaneous Games
 include(joinpath("games", "Extensive2Matrix.jl"))

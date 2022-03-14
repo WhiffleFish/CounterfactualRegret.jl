@@ -36,16 +36,13 @@ end
 
 ## extras
 
-
-import Base.print
-
-function Base.print(solver::AbstractCFRSolver{K,G}) where {K,G<:IIEMatrixGame}
-    println("\n")
+function Base.print(io::IO, solver::AbstractCFRSolver{K,G}) where {K,G<:IIEMatrixGame}
+    println(io)
     for (k,v) in solver.I
         σ = copy(v.s)
         σ ./= sum(σ)
         σ = round.(σ, digits=3)
-        println("Player: $(k) \t σ: $σ")
+        println(io, "Player: $(k) \t σ: $σ")
     end
 end
 
@@ -77,7 +74,7 @@ end
         ylabel := "Strategy"
         title := "Player 1"
         labels := labels1
-        reduce(hcat,I[0].hist)'
+        reduce(hcat,sol.I[0].hist)'
     end
 
     L2 = length(sol.I[1].σ)
@@ -88,6 +85,6 @@ end
         subplot := 2
         title := "Player 2"
         labels := labels2
-        reduce(hcat,I[1].hist)'
+        reduce(hcat,sol.I[1].hist)'
     end
 end

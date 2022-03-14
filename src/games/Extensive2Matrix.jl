@@ -2,8 +2,8 @@
 Convert extensive form to matrix form
 =#
 
-infodict(sol::AbstractCFRSolver{K,G,I}) where {K,G,I} = sol.I::Dict{K,I}
-strategy(I::AbstractInfoState) = I.σ::Vector{Float64}
+infodict(sol::AbstractCFRSolver{K,G,I}) where {K,G,I} = getfield(sol,:I)::Dict{K,I}
+strategy(I::AbstractInfoState) = getfield(I,:σ)::Vector{Float64}
 
 function pure_strategies(sol::CFRSolver, p::Int)
     game = sol.game
@@ -60,7 +60,7 @@ function Base.Matrix(game::Game)
             for (k2,σ2) in s2
                 solver.I[k2].s .= σ2
             end
-            eval = FullEvaluate(solver)
+            eval = evaluate(solver)
             mat[i,j] = eval
         end
     end

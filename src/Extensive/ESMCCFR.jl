@@ -118,7 +118,7 @@ function CFR(solver::ESCFRSolver, h, i, t, π_1, π_2)
         end
     else
         a_idx = I.a_idx
-        a_idx == 0 && (a_idx = rand(I))
+        iszero(a_idx) && (a_idx = rand(I))
         I.a_idx = a_idx
         a = A[a_idx]
         h′ = next_hist(game, h, a)
@@ -129,6 +129,7 @@ function CFR(solver::ESCFRSolver, h, i, t, π_1, π_2)
 end
 
 function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false) where {K,G,INFO<:MCInfoState}
+    regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
@@ -141,9 +142,11 @@ function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false
         end
         next!(prog)
     end
+    finalize_strategies!(solver)
 end
 
 function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false) where {K,G,INFO<:DebugMCInfoState}
+    regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
@@ -157,4 +160,5 @@ function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false
         end
         next!(prog)
     end
+    finalize_strategies!(solver)
 end
