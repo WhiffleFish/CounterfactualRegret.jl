@@ -1,8 +1,22 @@
-const MAT_INFO_KEY = Int
-const MAT_HIST = Vector{Int}
+using StaticArrays
 
-struct IIEMatrixGame{T} <: Game{MAT_HIST, MAT_INFO_KEY}
-    R::Matrix{Tuple{T,T}}
+const MAT_INFO_KEY = Int
+
+struct MatHist
+    h::SVector{2,Int}
+end
+
+function Base.length(h::MatHist)
+    l = 0
+    for a in h.h
+        iszero(a) && break
+        l += 1
+    end
+    return l
+end
+
+struct IIEMatrixGame{T} <: Game{MatHist, MAT_INFO_KEY}
+    R::Matrix{NTuple{2,T}}
 end
 
 IIEMatrixGame(g::MatrixGame) = IIEMatrixGame(g.R)
@@ -13,24 +27,27 @@ IIEMatrixGame() = IIEMatrixGame([
     (-1,1) (1,-1) (0,0)
 ])
 
-CounterfactualRegret.initialhist(::IIEMatrixGame) = Int[]
+CounterfactualRegret.initialhist(::IIEMatrixGame) = MatHist(SA[0,0])
 
-CounterfactualRegret.isterminal(::IIEMatrixGame, h::MAT_HIST) = length(h) > 1
+CounterfactualRegret.isterminal(::IIEMatrixGame, h::MatHist) = length(h) > 1
 
-function CounterfactualRegret.utility(game::IIEMatrixGame, i::Int, h::MAT_HIST)
-    length(h) > 1 ? game.R[h[1], h[2]][i] : 0
+function CounterfactualRegret.utility(game::IIEMatrixGame, i::Int, h::MatHist)
+    length(h) > 1 ? game.R[h.h...][i] : 0
 end
 
-CounterfactualRegret.player(::IIEMatrixGame, h::MAT_HIST) = length(h)+1
+CounterfactualRegret.player(::IIEMatrixGame, h::MatHist) = length(h)+1
 
 CounterfactualRegret.player(::IIEMatrixGame, k::MAT_INFO_KEY) = k+1
 
-CounterfactualRegret.next_hist(::IIEMatrixGame, h, a) = [h;a]
+function CounterfactualRegret.next_hist(::IIEMatrixGame, h::MatHist, a)
+    l = length(h)
+    return MatHist(setindex(h.h, a, l+1))
+end
 
 CounterfactualRegret.infokey(::IIEMatrixGame, h) = length(h)
 
-function CounterfactualRegret.actions(game::IIEMatrixGame, h::MAT_HIST)
-    length(h) == 0 ? (1:size(game.R,1)) : (1:size(game.R,2))
+function CounterfactualRegret.actions(game::IIEMatrixGame, h::MatHist)
+    iszero(length(h)) ? (1:size(game.R,1)) : (1:size(game.R,2))
 end
 
 
