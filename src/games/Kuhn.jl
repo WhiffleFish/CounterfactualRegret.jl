@@ -20,9 +20,8 @@ end
 
 struct Kuhn <: Game{Hist, KuhnInfoKey}
     cards::Vector{SVector{2,Int}}
+    Kuhn() = new([SVector(i,j) for i in 1:3, j in 1:3 if i != j])
 end
-
-Kuhn() = Kuhn([SVector(i,j) for i in 1:3, j in 1:3 if i != j])
 
 CounterfactualRegret.initialhist(::Kuhn) = Hist(SA[0,0], SA[-1,-1,-1])
 
@@ -42,17 +41,17 @@ function CounterfactualRegret.utility(::Kuhn, i::Int, h::Hist)
     L = length(as)
     has_higher_card = cards[i] > cards[other_player(i)]
     if as == SA[PASS, PASS, -1]
-        return has_higher_card ? 1 : -1
+        return has_higher_card ? 1. : -1.
     elseif as == SA[PASS, BET, PASS]
-        return i==2 ? 1 : -1
+        return i==2 ? 1. : -1.
     elseif as == SA[PASS, BET, BET]
-        return has_higher_card ? 2 : -2
+        return has_higher_card ? 2. : -2.
     elseif as == SA[BET, PASS, -1]
-        return i==1 ? 1 : -1
+        return i==1 ? 1. : -1.
     elseif as == SA[BET, BET, -1]
-        return has_higher_card ? 2 : -2
+        return has_higher_card ? 2. : -2.
     else
-        return 0
+        return 0.
     end
 end
 

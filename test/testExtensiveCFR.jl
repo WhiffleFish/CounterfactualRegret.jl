@@ -122,6 +122,9 @@ function CFRKuhnTest(sol_type, N::Int, atol::Float64)
     s1301 = trainer.I[(1,3,SA[0,1,-1])].s
     s1301 ./= sum(s1301)
     @test ≈(s1301, [0,1], atol=atol)
+
+    @test ≈(evaluate(trainer, 1), -1/18, atol=atol)
+    @test ≈(evaluate(trainer, 2),  1/18, atol=atol)
 end
 
 @testset "IIE Solvers" begin

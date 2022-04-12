@@ -15,11 +15,16 @@ function evaluate(solver::AbstractCFRSolver)
     return (p1_eval, p2_eval)
 end
 
+function evaluate(sol::AbstractCFRSolver, p::Int)
+    ih = initialhist(sol.game)
+    return evaluate(sol, ih, p, 0, 1.0, 1.0)
+end
+
 function evaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
     game = solver.game
     if isterminal(game, h)
         return utility(game, i, h)
-    elseif player(game, h) === 0 # chance player
+    elseif iszero(player(game, h)) # chance player
         A = chance_actions(game, h)
         s = 0.0
         for a in A
@@ -28,20 +33,21 @@ function evaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
         return s / length(A)
     end
 
-    I = infoset(solver, h)
+    I = infokey(game, h)
     A = actions(game, h)
 
     v_σ = 0.0
 
+    σ = strategy(solver, I)
     for (k,a) in enumerate(A)
         v_σ_Ia = 0.0
         h′ = next_hist(game, h, a)
         if player(game, h) === 1
-            v_σ_Ia = evaluate(solver, h′, i, t, I.σ[k]*π_1, π_2)
+            v_σ_Ia = evaluate(solver, h′, i, t, σ[k]*π_1, π_2)
         else
-            v_σ_Ia = evaluate(solver, h′, i, t, π_1, I.σ[k]*π_2)
+            v_σ_Ia = evaluate(solver, h′, i, t, π_1, σ[k]*π_2)
         end
-        v_σ += I.σ[k]*v_σ_Ia
+        v_σ += σ[k]*v_σ_Ia
     end
 
     return v_σ
@@ -76,26 +82,26 @@ function MonteCarloEvaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
     game = solver.game
     if isterminal(game, h)
         return utility(game, i, h)
-    elseif player(game, h) === 0 # chance player
+    elseif iszero(player(game, h)) # chance player
         a = chance_action(game, h)
         h′ = next_hist(game,h,a)
         return MonteCarloEvaluate(solver, h′, i, t, π_1, π_2)
     end
 
-    I = infoset(solver, h)
+    I = infokey(game, h)
     A = actions(game, h)
 
     v_σ = 0.0
-
+    σ = strategy(solver, I)
     for (k,a) in enumerate(A)
         v_σ_Ia = 0.0
         h′ = next_hist(game, h, a)
         if player(game, h) === 1
-            v_σ_Ia = MonteCarloEvaluate(solver, h′, i, t, I.σ[k]*π_1, π_2)
+            v_σ_Ia = MonteCarloEvaluate(solver, h′, i, t, σ[k]*π_1, π_2)
         else
-            v_σ_Ia = MonteCarloEvaluate(solver, h′, i, t, π_1, I.σ[k]*π_2)
+            v_σ_Ia = MonteCarloEvaluate(solver, h′, i, t, π_1, σ[k]*π_2)
         end
-        v_σ += I.σ[k]*v_σ_Ia
+        v_σ += σ[k]*v_σ_Ia
     end
 
     return v_σ

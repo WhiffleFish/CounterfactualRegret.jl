@@ -2,6 +2,8 @@ abstract type IIESolver end # Imperfect Information Extensive Game Solver
 abstract type AbstractInfoState end
 abstract type AbstractCFRSolver{K,G<:Game,I<:AbstractInfoState} <: IIESolver end
 
+infokeytype(::AbstractCFRSolver{K}) where K = K
+
 struct InfoState <: AbstractInfoState
     σ::Vector{Float64}
     r::Vector{Float64}
