@@ -1,16 +1,3 @@
-using CounterfactualRegret
-const CFR = CounterfactualRegret
-game = CFR.IIEMatrixGame([(randn(), randn()) for i in 1:5, j in 1:5])
-game = CFR.Kuhn()
-sol = CFRSolver(game)
-cb = CFR.ExploitabilityCallback(sol, 100)
-train!(sol, 100_000, cb = cb)
-
-using Plots
-plot(cb; yscale=:log10, linewidth=4)
-
-cb.hist.y
-
 @testset "callback" begin
     # Exploitability Callback
     game = CFR.Kuhn()
