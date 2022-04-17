@@ -55,4 +55,5 @@
     @test size(mat) == (l1, l2)
 
     @test RecipesBase.apply_recipe(Dict{Symbol,Any}(), sol) ≠ nothing
+    @test RecipesBase.apply_recipe(Dict{Symbol,Any}(), sol.I[0]) ≠ nothing
 end

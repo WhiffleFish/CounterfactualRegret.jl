@@ -30,7 +30,7 @@ function CFR(solver::CSCFRSolver, h, i, t, π_1, π_2)
     game = solver.game
     if isterminal(game, h)
         return utility(game, i, h)
-    elseif player(game, h) === 0 # chance player
+    elseif iszero(player(game, h)) # chance player
         a = chance_action(game, h)
         h′ = next_hist(game,h,a)
         return CFR(solver, h′, i, t, π_1, π_2)

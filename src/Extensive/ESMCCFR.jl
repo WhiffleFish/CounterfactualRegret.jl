@@ -128,7 +128,7 @@ function CFR(solver::ESCFRSolver, h, i, t, π_1, π_2)
     return v_σ
 end
 
-function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false) where {K,G,INFO<:MCInfoState}
+function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false, cb=()->()) where {K,G,INFO<:MCInfoState}
     regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
@@ -140,12 +140,13 @@ function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false
             regret_match!(I)
             I.a_idx = 0
         end
+        cb()
         next!(prog)
     end
     finalize_strategies!(solver)
 end
 
-function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false) where {K,G,INFO<:DebugMCInfoState}
+function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false, cb=()->()) where {K,G,INFO<:DebugMCInfoState}
     regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
@@ -158,6 +159,7 @@ function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false
             push!(I.hist, copy(I.s) ./ sum(I.s))
             I.a_idx = 0
         end
+        cb()
         next!(prog)
     end
     finalize_strategies!(solver)

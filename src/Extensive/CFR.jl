@@ -134,7 +134,7 @@ function CFR(solver::CFRSolver, h, i, t, π_1, π_2)
     return v_σ
 end
 
-function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false)
+function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=()->())
     regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
@@ -145,12 +145,13 @@ function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false)
         for I in values(solver.I)
             regret_match!(I)
         end
+        cb()
         next!(prog)
     end
     finalize_strategies!(solver)
 end
 
-function train!(solver::DEBUG_CFRSOLVER, N::Int; show_progress::Bool=false)
+function train!(solver::DEBUG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=()->())
     regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
@@ -162,6 +163,7 @@ function train!(solver::DEBUG_CFRSOLVER, N::Int; show_progress::Bool=false)
             regret_match!(I)
             push!(I.hist, copy(I.s) ./ sum(I.s))
         end
+        cb()
         next!(prog)
     end
     finalize_strategies!(solver)
@@ -176,7 +178,14 @@ function finalize_strategies!(solver::AbstractCFRSolver)
 end
 
 function strategy(sol::AbstractCFRSolver{K}, I::K) where K
-    return strategy(sol.I[I])
+    infostate = get(sol.I, I, nothing)
+    if isnothing(infostate)
+        L = length(first(values(sol.I)).σ)
+        return fill(inv(L), L)
+    else
+        σ_I = infostate.s
+        return σ_I ./ sum(σ_I)
+    end
 end
 
 ## extras

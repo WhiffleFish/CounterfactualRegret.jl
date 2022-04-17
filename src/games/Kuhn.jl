@@ -99,7 +99,12 @@ function Base.print(io::IO, solver::AbstractCFRSolver{K,G}) where {K,G<:Kuhn}
     println(io)
     for (k,v) in solver.I
         h = k[3]
-        h_str = rpad(join(h),3,"_")
+        Lp1 = findfirst(==(-1), h)
+        h_str = if isnothing(Lp1)
+            "_"*3
+        else
+            rpad(join(h[1:Lp1-1]),3,"_")
+        end
         σ = copy(v.s)
         σ ./= sum(σ)
         σ = round.(σ, digits=3)

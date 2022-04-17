@@ -40,7 +40,7 @@ function CFR(solver::DCFRSolver, h, i, t, π_1, π_2)
     game = solver.game
     if isterminal(game, h)
         return utility(game, i, h)
-    elseif player(game, h) === 0 # chance player
+    elseif iszero(player(game, h)) # chance player
         A = chance_actions(game, h)
         s = 0.0
         for a in A
