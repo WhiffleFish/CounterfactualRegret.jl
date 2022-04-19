@@ -1,7 +1,7 @@
 name = "CounterfactualRegret"
 uuid = "9fefe0b7-a0d5-4e12-a8ed-3472cccdfc49"
 authors = ["WhiffleFish <tylertronics@gmail.com>"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
