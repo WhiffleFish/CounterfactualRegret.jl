@@ -96,12 +96,6 @@ function SimpleIIPlayer(game::SimpleIIGame, id::Int, strategy::Vector{Float64})
     )
 end
 
-function clear!(p::SimpleIIPlayer)
-    resize!(p.hist, 1)
-    p.hist[1] .= p.strategy
-    p.regret_avg .= 0.0
-end
-
 function terminals(game::SimpleIIGame, h::AbstractVector{Int})
     return game._terminal_cache[h]
 end

@@ -15,6 +15,7 @@
     train!(sol, 100_000, cb = cb)
 
     @test RecipesBase.apply_recipe(Dict{Symbol,Any}(), cb) ≠ nothing
+    @test RecipesBase.apply_recipe(Dict{Symbol,Any}(), cb.hist) ≠ nothing
     @test 0.0 < last(cb.hist.y) < 1e-2
     @test length(cb.hist.y) == length(cb.hist.x) == 1_000
 

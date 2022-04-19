@@ -1,5 +1,7 @@
 # CounterfactualRegret.jl
 
+[![codecov](https://codecov.io/gh/WhiffleFish/CounterfactualRegret.jl/branch/main/graph/badge.svg?token=X32NBIUN9Z)](https://codecov.io/gh/WhiffleFish/CounterfactualRegret.jl)
+
 ## Implemented Solvers
 - `CFRSolver` - Vanilla CFR solver
 - `DCFRSolver` - Discounted CFR solver

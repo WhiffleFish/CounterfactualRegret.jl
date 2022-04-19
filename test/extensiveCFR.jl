@@ -73,6 +73,11 @@ function CFRMatrixTest(sol_type, N::Int)
         all( .≈(F_eval,(6/11,6/11), atol=0.01)) ||
         all( .≈(F_eval,(1,1), atol=0.01))
     end
+
+    sol = sol_type(game; debug=true)
+    train!(sol, 100_000)
+
+    @test CFR.infokeytype(sol) == Int
 end
 
 function CFRKuhnTest(sol_type, N::Int, atol::Float64)
