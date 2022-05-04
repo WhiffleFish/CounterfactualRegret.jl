@@ -56,3 +56,16 @@ function (t::Throttle)()
     iszero(rem(t.state, t.n)) && t.f()
     t.state += 1
 end
+
+struct CallbackChain{T<:Tuple}
+	t::T
+	CallbackChain(args...) = new{typeof(args)}(args)
+end
+
+Base.iterate(chain::CallbackChain, s=1) = iterate(chain.t, s)
+
+function (chain::CallbackChain)()
+	for cb in chain
+		cb()
+	end
+end
