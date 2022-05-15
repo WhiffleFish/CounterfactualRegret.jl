@@ -73,10 +73,9 @@ function infoset(solver::AbstractCFRSolver{K,G,INFO}, h) where {K,G,INFO}
     return I
 end
 
-function regret_match!(I::AbstractInfoState)
+function regret_match!(σ::AbstractVector, r::AbstractVector)
     s = 0.0
-    σ = I.σ
-    for (i,r_i) in enumerate(I.r)
+    for (i,r_i) in enumerate(r)
         if r_i > 0
             s += r_i
             σ[i] = r_i
@@ -86,6 +85,8 @@ function regret_match!(I::AbstractInfoState)
     end
     s > 0 ? (σ ./= s) : fill!(σ,1/length(σ))
 end
+
+regret_match!(I::AbstractInfoState) = regret_match!(I.σ, I.r)
 
 function regret_match!(sol::AbstractCFRSolver)
     for I in values(sol.I)
@@ -139,7 +140,7 @@ function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=()-
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
-        for i in 1:2
+        for i in 1:players(solver.game)
             CFR(solver, ih, i, t, 1.0, 1.0)
         end
         for I in values(solver.I)
@@ -156,7 +157,7 @@ function train!(solver::DEBUG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=(
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
-        for i in 1:2
+        for i in 1:players(solver.game)
             CFR(solver, ih, i, t, 1.0, 1.0)
         end
         for I in values(solver.I)

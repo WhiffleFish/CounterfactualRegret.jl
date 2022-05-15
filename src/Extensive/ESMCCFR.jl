@@ -48,22 +48,20 @@ struct ESCFRSolver{K,G,I} <: AbstractCFRSolver{K,G,I}
     game::G
 end
 
-"""
-Generate random action index from info state according to strategy σ
-"""
-function Random.rand(rng::AbstractRNG, I::AbstractInfoState)
-    σ = I.σ
+function weighted_sample(rng::AbstractRNG, w::AbstractVector)
     t = rand(rng)
     i = 1
-    cw = σ[1]
-    while cw < t && i < length(σ)
+    cw = first(w)
+    while cw < t && i < length(w)
         i += 1
-        @inbounds cw += σ[i]
+        @inbounds cw += w[i]
     end
     return i
 end
 
-Random.rand(I::AbstractInfoState) = rand(Random.GLOBAL_RNG, I)
+weighted_sample(w::AbstractVector) = weighted_sample(Random.GLOBAL_RNG, w)
+
+Random.rand(I::AbstractInfoState) = weighted_sample(I.σ)
 
 
 """
@@ -85,14 +83,16 @@ function ESCFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
 end
 
 # TODO: Validate regret update. Not entirely confident in code nor MCCFR paper eqn.
-function CFR(solver::ESCFRSolver, h, i, t, π_1, π_2)
+function CFR(solver::ESCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
     game = solver.game
+    current_player = player(game, h)
+
     if isterminal(game, h)
         return utility(game, i, h)
-    elseif player(game, h) === 0 # chance player
+    elseif iszero(current_player) # chance player
         a = chance_action(game, h)
         h′ = next_hist(game,h,a)
-        return CFR(solver, h′, i, t, π_1, π_2)
+        return CFR(solver, h′, i, t, π_i, π_ni)
     end
 
     I = infoset(solver, h)
@@ -100,16 +100,11 @@ function CFR(solver::ESCFRSolver, h, i, t, π_1, π_2)
 
     v_σ = 0.0
 
-    if player(game, h) === i
+    if current_player === i
         v_σ_Ia = I._tmp_σ
-        π_i = i == 1 ? π_1 : π_2
         for (k,a) in enumerate(A)
             h′ = next_hist(game, h, a)
-            if i === 1
-                v_σ_Ia[k] = CFR(solver, h′, i, t, I.σ[k]*π_1, π_2)
-            else
-                v_σ_Ia[k] = CFR(solver, h′, i, t, π_1, I.σ[k]*π_2)
-            end
+            v_σ_Ia[k] = CFR(solver, h′, i, t, I.σ[k]*π_i, π_ni)
             v_σ += I.σ[k]*v_σ_Ia[k]
         end
         for (k,a) in enumerate(A)
@@ -122,7 +117,7 @@ function CFR(solver::ESCFRSolver, h, i, t, π_1, π_2)
         I.a_idx = a_idx
         a = A[a_idx]
         h′ = next_hist(game, h, a)
-        v_σ = CFR(solver, h′, i, t, π_1, π_2)
+        v_σ = CFR(solver, h′, i, t, π_i, π_ni*I.σ[a_idx])
     end
 
     return v_σ
@@ -133,8 +128,8 @@ function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
-        for i in 1:2
-            CFR(solver, ih, i, t, 1.0, 1.0)
+        for i in 1:players(solver.game)
+            CFR(solver, ih, i, t)
         end
         for I in values(solver.I)
             regret_match!(I)
@@ -151,8 +146,8 @@ function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
-        for i in 1:2
-            CFR(solver, ih, i, t, 1.0, 1.0)
+        for i in 1:players(solver.game)
+            CFR(solver, ih, i, t)
         end
         for I in values(solver.I)
             regret_match!(I)

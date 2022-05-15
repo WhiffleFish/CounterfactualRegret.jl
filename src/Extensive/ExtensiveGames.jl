@@ -83,5 +83,13 @@ Returns all actions available at some history
 """
 function actions end
 
+"""
+    `players(game)`
+
+Returns number of players in game (excluding chance player)
+"""
+function players end
+
+players(game::Game) = 2
 
 @inline other_player(i) = 3-i

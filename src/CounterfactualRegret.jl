@@ -18,8 +18,9 @@ export infokeytype, histtype
 include(joinpath("Extensive", "CFR.jl"))
 include(joinpath("Extensive", "CSMCCFR.jl"))
 include(joinpath("Extensive", "ESMCCFR.jl"))
+include(joinpath("Extensive", "OSMCCFR.jl"))
 include(joinpath("Extensive", "DCFR.jl"))
-export CFRSolver, CSCFRSolver, DCFRSolver, ESCFRSolver
+export CFRSolver, CSCFRSolver, DCFRSolver, ESCFRSolver, OSCFRSolver
 export train!
 
 
