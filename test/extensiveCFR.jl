@@ -1,6 +1,6 @@
 using CounterfactualRegret: IIEMatrixGame, Kuhn
 
-function CFRMatrixTest(sol_type, N::Int)
+function CFRMatrixTest(sol_type, N::Int; atol=0.01, debug=true)
     ## Rock Paper Scissors
     game = IIEMatrixGame([
         (0,0) (-1,1) (1,-1);
@@ -11,14 +11,14 @@ function CFRMatrixTest(sol_type, N::Int)
     train!(trainer, N)
     s1 = trainer.I[0].s
     s1 ./= sum(s1)
-        @test ≈(s1, fill(1/3,3), atol=0.01)
+        @test ≈(s1, fill(1/3,3), atol=atol)
     s2 = trainer.I[1].s
     s2 ./= sum(s2)
-        @test ≈(s2, fill(1/3,3), atol=0.01)
+        @test ≈(s2, fill(1/3,3), atol=atol)
     F_eval = evaluate(trainer)
-        @test all( .≈(F_eval,(0,0), atol=0.01))
+        @test all( .≈(F_eval,(0,0), atol=atol))
     MC_eval = MonteCarloEvaluate(trainer,1)
-        @test all( .≈(MC_eval,(0,0), atol=0.01))
+        @test all( .≈(MC_eval,(0,0), atol=atol))
 
     ## Prisoners Dilemma
     game = IIEMatrixGame([
@@ -29,14 +29,14 @@ function CFRMatrixTest(sol_type, N::Int)
     train!(trainer, N)
     s1 = trainer.I[0].s
     s1 ./= sum(s1)
-        @test ≈(s1, [0,1], atol=0.01)
+        @test ≈(s1, [0,1], atol=atol)
     s2 = trainer.I[1].s
     s2 ./= sum(s2)
-        @test ≈(s2, [0,1], atol=0.01)
+        @test ≈(s2, [0,1], atol=atol)
     F_eval = evaluate(trainer)
-        @test all( .≈(F_eval,(-2,-2), atol=0.01))
+        @test all( .≈(F_eval,(-2,-2), atol=atol))
     MC_eval = MonteCarloEvaluate(trainer,1)
-        @test all( .≈(MC_eval,(-2,-2), atol=0.01))
+        @test all( .≈(MC_eval,(-2,-2), atol=atol))
 
     # https://sites.math.northwestern.edu/~clark/364/handouts/bimatrix-mixed.pdf
     game = CounterfactualRegret.IIEMatrixGame([
@@ -50,34 +50,36 @@ function CFRMatrixTest(sol_type, N::Int)
     s1 = trainer.I[0].s
     s1 ./= sum(s1)
         @test begin
-            ≈(s1, NEs[1], atol=0.01) ||
-            ≈(s1, NEs[2], atol=0.01) ||
-            ≈(s1, NEs[3], atol=0.01)
+            ≈(s1, NEs[1], atol=atol) ||
+            ≈(s1, NEs[2], atol=atol) ||
+            ≈(s1, NEs[3], atol=atol)
         end
     s2 = trainer.I[1].s
     s2 ./= sum(s2)
         @test begin
-            ≈(s2, NEs[1], atol=0.01) ||
-            ≈(s2, NEs[2], atol=0.01) ||
-            ≈(s2, NEs[3], atol=0.01)
+            ≈(s2, NEs[1], atol=atol) ||
+            ≈(s2, NEs[2], atol=atol) ||
+            ≈(s2, NEs[3], atol=atol)
         end
     F_eval = evaluate(trainer)
     @test begin
-        all( .≈(F_eval,(6/5,6/5), atol=0.01)) ||
-        all( .≈(F_eval,(6/11,6/11), atol=0.01)) ||
-        all( .≈(F_eval,(1,1), atol=0.01))
+        all( .≈(F_eval,(6/5,6/5), atol=atol)) ||
+        all( .≈(F_eval,(6/11,6/11), atol=atol)) ||
+        all( .≈(F_eval,(1,1), atol=atol))
     end
     MC_eval = MonteCarloEvaluate(trainer,1)
     @test begin
-        all( .≈(F_eval,(6/5,6/5), atol=0.01)) ||
-        all( .≈(F_eval,(6/11,6/11), atol=0.01)) ||
-        all( .≈(F_eval,(1,1), atol=0.01))
+        all( .≈(F_eval,(6/5,6/5), atol=atol)) ||
+        all( .≈(F_eval,(6/11,6/11), atol=atol)) ||
+        all( .≈(F_eval,(1,1), atol=atol))
     end
 
-    sol = sol_type(game; debug=true)
-    train!(sol, 100_000)
+    if debug
+        sol = sol_type(game; debug=true)
+        train!(sol, 100_000)
 
-    @test CFR.infokeytype(sol) == Int
+        @test CFR.infokeytype(sol) == Int
+    end
 end
 
 function CFRKuhnTest(sol_type, N::Int, atol::Float64)
@@ -141,4 +143,6 @@ end
 
     @testset "ESCFR Matrix" begin CFRMatrixTest(ESCFRSolver, 500_000) end
     @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03) end
+
+    @testset "OSCFR Matrix" begin CFRMatrixTest(OSCFRSolver, 1_000_000; atol=0.05, debug=false) end
 end
