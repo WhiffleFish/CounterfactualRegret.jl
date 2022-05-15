@@ -53,11 +53,9 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, s=1.0)
             I.r[k] += if k == a_idx
                 W*π_tail*(1 - σ[a_idx]) # doesn't seem right
             else
-                -W*π_tail*σ[a_idx]
+                -W*σ[a_idx]
             end
         end
-
-        # push!(sol.Mv[p], I,t,r̃)
 
         return u, π_tail*σ[a_idx]
     else
@@ -69,21 +67,18 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, s=1.0)
         a = A[a_idx]
         h′ = next_hist(game, h, a)
         u, π_tail = CFR(sol, h′, p, t, π_i*σ[a_idx], π_ni, s*σ[a_idx])
-
-        # push!(sol.Mπ, I,t,σ)
         I.s .+= (π_ni / s) .* σ
+
         return u, π_tail*σ[a_idx]
     end
 end
 
 function train!(solver::OSCFRSolver, N::Int; show_progress::Bool=false, cb=()->())
-    regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:players(solver.game)
             CFR(solver, ih, i, t)
-            regret_match!(solver)
         end
         cb()
         next!(prog)
