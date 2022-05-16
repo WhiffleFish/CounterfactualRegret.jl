@@ -109,7 +109,7 @@ function CFR(solver::ESCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
         end
 
         @. I.r += (1 - I.σ)*(v_σ_Ia - v_σ)
-        @. I.s += π_i*I.σ
+        @. I.s += I.σ
     else
         a_idx = I.a_idx
         iszero(a_idx) && (a_idx = rand(I))
