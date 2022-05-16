@@ -2,8 +2,8 @@ using StaticArrays
 
 const MAT_INFO_KEY = Int
 
-struct MatHist
-    h::SVector{2,Int}
+struct MatHist{N}
+    h::SVector{N,Int}
 end
 
 function Base.length(h::MatHist)
@@ -15,8 +15,8 @@ function Base.length(h::MatHist)
     return l
 end
 
-struct IIEMatrixGame{T} <: Game{MatHist, MAT_INFO_KEY}
-    R::Matrix{NTuple{2,T}}
+struct IIEMatrixGame{N,T} <: Game{MatHist, MAT_INFO_KEY}
+    R::Array{NTuple{N,T}, N}
 end
 
 IIEMatrixGame(g::MatrixGame) = IIEMatrixGame(g.R)
@@ -27,17 +27,19 @@ IIEMatrixGame() = IIEMatrixGame([
     (-1,1) (1,-1) (0,0)
 ])
 
-CounterfactualRegret.initialhist(::IIEMatrixGame) = MatHist(SA[0,0])
+CounterfactualRegret.initialhist(::IIEMatrixGame{N}) where N = MatHist(@SVector zeros(Int,N))
 
-CounterfactualRegret.isterminal(::IIEMatrixGame, h::MatHist) = length(h) > 1
+CounterfactualRegret.isterminal(::IIEMatrixGame, h::MatHist) = length(h) === length(h.h)
 
-function CounterfactualRegret.utility(game::IIEMatrixGame, i::Int, h::MatHist)
-    length(h) > 1 ? game.R[h.h...][i] : 0
+function CounterfactualRegret.utility(game::IIEMatrixGame{N,T}, i::Int, h::MatHist) where {N,T}
+    isterminal(game, h) ? game.R[h.h...][i] : zero(T)
 end
 
 CounterfactualRegret.player(::IIEMatrixGame, h::MatHist) = length(h)+1
 
 CounterfactualRegret.player(::IIEMatrixGame, k::MAT_INFO_KEY) = k+1
+
+CounterfactualRegret.players(::IIEMatrixGame{N}) where N = N
 
 function CounterfactualRegret.next_hist(::IIEMatrixGame, h::MatHist, a)
     l = length(h)
@@ -47,7 +49,7 @@ end
 CounterfactualRegret.infokey(::IIEMatrixGame, h) = length(h)
 
 function CounterfactualRegret.actions(game::IIEMatrixGame, h::MatHist)
-    iszero(length(h)) ? (1:size(game.R,1)) : (1:size(game.R,2))
+    return 1:size(game.R, player(game,h))
 end
 
 
@@ -56,10 +58,11 @@ end
 function Base.print(io::IO, solver::AbstractCFRSolver{K,G}) where {K,G<:IIEMatrixGame}
     println(io)
     for (k,v) in solver.I
+        p = player(solver.game, k)
         σ = copy(v.s)
         σ ./= sum(σ)
         σ = round.(σ, digits=3)
-        println(io, "Player: $(k) \t σ: $σ")
+        println(io, "Player: $(p) \t σ: $σ")
     end
 end
 
