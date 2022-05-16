@@ -51,7 +51,7 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, s=1.0)
         W = u*π_ni
         for (k, a′) in enumerate(A)
             I.r[k] += if k == a_idx
-                W*π_tail*(1 - σ[a_idx]) # doesn't seem right
+                W*π_tail*(1 - σ[a_idx])
             else
                 -W*σ[a_idx]
             end
@@ -66,7 +66,7 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, s=1.0)
         a_idx = weighted_sample(σ)
         a = A[a_idx]
         h′ = next_hist(game, h, a)
-        u, π_tail = CFR(sol, h′, p, t, π_i*σ[a_idx], π_ni, s*σ[a_idx])
+        u, π_tail = CFR(sol, h′, p, t, π_i, π_ni*σ[a_idx], s*σ[a_idx])
         I.s .+= (π_ni / s) .* σ
 
         return u, π_tail*σ[a_idx]

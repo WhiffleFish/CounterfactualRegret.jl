@@ -31,11 +31,10 @@ function (cb::ExploitabilityCallback)()
 end
 
 @recipe function f(hist::ExploitabilityHistory)
-    xlabel := "Training Steps"
+    xlabel --> "Training Steps"
     @series begin
-        subplot := 1
-        ylabel := "Exploitability"
-        label := ""
+        ylabel --> "Exploitability"
+        label --> ""
         hist.x, hist.y
     end
 end
