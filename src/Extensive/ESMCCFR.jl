@@ -82,7 +82,7 @@ function ESCFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
     end
 end
 
-# TODO: Validate regret update. Not entirely confident in code nor MCCFR paper eqn.
+
 function CFR(solver::ESCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
     game = solver.game
     current_player = player(game, h)
@@ -107,10 +107,9 @@ function CFR(solver::ESCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
             v_σ_Ia[k] = CFR(solver, h′, i, t, I.σ[k]*π_i, π_ni)
             v_σ += I.σ[k]*v_σ_Ia[k]
         end
-        for (k,a) in enumerate(A)
-            I.r[k] += (1 - I.σ[k])*(v_σ_Ia[k] - v_σ)
-            I.s[k] += π_i*I.σ[k]
-        end
+
+        @. I.r += (1 - I.σ)*(v_σ_Ia - v_σ)
+        @. I.s += π_i*I.σ
     else
         a_idx = I.a_idx
         iszero(a_idx) && (a_idx = rand(I))
@@ -131,10 +130,7 @@ function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false
         for i in 1:players(solver.game)
             CFR(solver, ih, i, t)
         end
-        for I in values(solver.I)
-            regret_match!(I)
-            I.a_idx = 0
-        end
+        regret_match!(solver)
         cb()
         next!(prog)
     end

@@ -94,15 +94,17 @@ function regret_match!(sol::AbstractCFRSolver)
     end
 end
 
-function CFR(solver::CFRSolver, h, i, t, π_1, π_2)
+function CFR(solver::CFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
     game = solver.game
+    current_player = player(game, h)
+
     if isterminal(game, h)
         return utility(game, i, h)
-    elseif player(game, h) === 0 # chance player
+    elseif iszero(current_player) # chance player
         A = chance_actions(game, h)
         s = 0.0
         for a in A
-            s += CFR(solver, next_hist(game, h, a), i, t, π_1, π_2)
+            s += CFR(solver, next_hist(game, h, a), i, t, π_i, π_ni)
         end
         return s / length(A)
     end
@@ -113,22 +115,19 @@ function CFR(solver::CFRSolver, h, i, t, π_1, π_2)
     v_σ = 0.0
     v_σ_Ia = I._tmp_σ
 
-    for (k,a) in enumerate(A)
-        h′ = next_hist(game, h, a)
-        if player(game, h) === 1
-            v_σ_Ia[k] = CFR(solver, h′, i, t, I.σ[k]*π_1, π_2)
-        else
-            v_σ_Ia[k] = CFR(solver, h′, i, t, π_1, I.σ[k]*π_2)
-        end
-        v_σ += I.σ[k]*v_σ_Ia[k]
-    end
-
-    if player(game, h) == i
-        π_i = i == 1 ? π_1 : π_2
-        π_ni = i == 1 ? π_2 : π_1
+    if current_player === i
         for (k,a) in enumerate(A)
-            I.r[k] += π_ni*(v_σ_Ia[k] - v_σ)
-            I.s[k] += π_i*I.σ[k]
+            h′ = next_hist(game, h, a)
+            v_σ_Ia[k] = CFR(solver, h′, i, t, I.σ[k]*π_i, π_ni)
+            v_σ += I.σ[k]*v_σ_Ia[k]
+        end
+        @. I.r += π_ni*(v_σ_Ia - v_σ)
+        @. I.s += π_i*I.σ
+    else
+        for (k,a) in enumerate(A)
+            h′ = next_hist(game, h, a)
+            v_σ_Ia[k] = CFR(solver, h′, i, t, π_i, I.σ[k]*π_ni)
+            v_σ += I.σ[k]*v_σ_Ia[k]
         end
     end
 
