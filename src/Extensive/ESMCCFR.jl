@@ -82,8 +82,14 @@ function ESCFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
     end
 end
 
+function regret_match!(sol::ESCFRSolver)
+    for I in values(sol.I)
+        regret_match!(I)
+        I.a_idx = 0
+    end
+end
 
-function CFR(solver::ESCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
+function CFR(solver::ESCFRSolver, h, i, t)
     game = solver.game
     current_player = player(game, h)
 
@@ -92,7 +98,7 @@ function CFR(solver::ESCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
     elseif iszero(current_player) # chance player
         a = chance_action(game, h)
         h′ = next_hist(game,h,a)
-        return CFR(solver, h′, i, t, π_i, π_ni)
+        return CFR(solver, h′, i, t)
     end
 
     I = infoset(solver, h)
@@ -100,11 +106,11 @@ function CFR(solver::ESCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
 
     v_σ = 0.0
 
-    if current_player === i
+    if current_player == i
         v_σ_Ia = I._tmp_σ
         for (k,a) in enumerate(A)
             h′ = next_hist(game, h, a)
-            v_σ_Ia[k] = CFR(solver, h′, i, t, I.σ[k]*π_i, π_ni)
+            v_σ_Ia[k] = CFR(solver, h′, i, t)
             v_σ += I.σ[k]*v_σ_Ia[k]
         end
 
@@ -116,7 +122,7 @@ function CFR(solver::ESCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
         I.a_idx = a_idx
         a = A[a_idx]
         h′ = next_hist(game, h, a)
-        v_σ = CFR(solver, h′, i, t, π_i, π_ni*I.σ[a_idx])
+        v_σ = CFR(solver, h′, i, t)
     end
 
     return v_σ

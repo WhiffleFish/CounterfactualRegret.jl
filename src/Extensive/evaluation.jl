@@ -4,31 +4,25 @@
 Evaluate full tree traversed by CFR solver. \n
 Returns tuple corresponding to utilities for both players.
 """
-function evaluate(solver::AbstractCFRSolver)
-    finalize_strategies!(solver)
-
-    ih = initialhist(solver.game)
-
-    p1_eval = evaluate(solver, ih, 1, 0, 1.0, 1.0)
-    p2_eval = evaluate(solver, ih, 2, 0, 1.0, 1.0)
-
-    return (p1_eval, p2_eval)
+function evaluate(sol::AbstractCFRSolver)
+    return Tuple(evaluate(sol, p) for p in 1:players(sol.game))
 end
 
 function evaluate(sol::AbstractCFRSolver, p::Int)
-    ih = initialhist(sol.game)
-    return evaluate(sol, ih, p, 0, 1.0, 1.0)
+    return evaluate(sol, initialhist(sol.game), p)
 end
 
-function evaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
+function evaluate(solver::AbstractCFRSolver, h, i)
     game = solver.game
+    current_player = player(game, h)
+
     if isterminal(game, h)
         return utility(game, i, h)
-    elseif iszero(player(game, h)) # chance player
+    elseif iszero(current_player) # chance player
         A = chance_actions(game, h)
         s = 0.0
         for a in A
-            s += evaluate(solver, next_hist(game, h, a), i, t, π_1, π_2)
+            s += evaluate(solver, next_hist(game, h, a), i)
         end
         return s / length(A)
     end
@@ -39,15 +33,9 @@ function evaluate(solver::AbstractCFRSolver, h, i, t, π_1, π_2)
     v_σ = 0.0
 
     σ = strategy(solver, I)
+
     for (k,a) in enumerate(A)
-        v_σ_Ia = 0.0
-        h′ = next_hist(game, h, a)
-        if player(game, h) === 1
-            v_σ_Ia = evaluate(solver, h′, i, t, σ[k]*π_1, π_2)
-        else
-            v_σ_Ia = evaluate(solver, h′, i, t, π_1, σ[k]*π_2)
-        end
-        v_σ += σ[k]*v_σ_Ia
+        v_σ += σ[k]*evaluate(solver, next_hist(game, h, a), i)
     end
 
     return v_σ
