@@ -180,9 +180,7 @@ function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=()-
         for i in 1:players(solver.game)
             CFR(solver, ih, i, t)
         end
-        for I in values(solver.I)
-            regret_match!(I)
-        end
+        regret_match!(solver)
         cb()
         next!(prog)
     end

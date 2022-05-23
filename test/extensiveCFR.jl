@@ -131,6 +131,14 @@ function CFRKuhnTest(sol_type, N::Int, atol::Float64; kwargs...)
     @test ≈(s1301, [0,1], atol=atol)
 end
 
+function KuhnExploitabilityTest(sol_type, N::Int, tol::Float64=1e-2; kwargs...)
+    game = Kuhn()
+    sol = sol_type(game; kwargs...)
+    cb = CFR.ExploitabilityCallback(sol, 100)
+    train!(sol, N, cb=cb)
+    @test last(cb.hist.y) < tol
+end
+
 @testset "IIE Solvers" begin
     @testset "CFR Matrix" begin CFRMatrixTest(CFRSolver, 100_000) end
     @testset "CFR Kuhn" begin CFRKuhnTest(CFRSolver, 100_000, 0.03) end
@@ -145,4 +153,6 @@ end
     @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; discount=true) end
 
     @testset "OSCFR Matrix" begin CFRMatrixTest(OSCFRSolver, 1_000_000; atol=0.05, debug=false) end
+    @testset "OSCFR Matrix" begin KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2) end
+    @testset "OSCFR Matrix" begin KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; discount=true) end
 end
