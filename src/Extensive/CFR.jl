@@ -38,9 +38,13 @@ function DebugInfoState(L::Int)
     )
 end
 
-struct CFRSolver{K,G,I} <: AbstractCFRSolver{K,G,I}
+struct CFRSolver{discount,K,G,I} <: AbstractCFRSolver{K,G,I}
+    dc::Val{discount}
     I::Dict{K, I}
     game::G
+    α::Float64
+    β::Float64
+    γ::Float64
 end
 
 """
@@ -53,11 +57,18 @@ for training history of individual information states to be plotted with
 `Plots.plot(is::DebugInfoState)`
 
 """
-function CFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
+function CFRSolver(
+    game::Game{H,K};
+    discount::Bool  = false,
+    alpha::Float64  = 1.0,
+    beta::Float64   = 1.0,
+    gamma::Float64  = 1.0,
+    debug::Bool     = false) where {H,K}
+
     if debug
-        return CFRSolver(Dict{K, DebugInfoState}(), game)
+        return CFRSolver(Val(discount), Dict{K, DebugInfoState}(), game, alpha, beta, gamma)
     else
-        return CFRSolver(Dict{K, InfoState}(), game)
+        return CFRSolver(Val(discount), Dict{K, InfoState}(), game, alpha, beta, gamma)
     end
 end
 
@@ -76,14 +87,14 @@ end
 function regret_match!(σ::AbstractVector, r::AbstractVector)
     s = 0.0
     for (i,r_i) in enumerate(r)
-        if r_i > 0
+        if r_i > 0.0
             s += r_i
             σ[i] = r_i
         else
             σ[i] = 0.0
         end
     end
-    s > 0 ? (σ ./= s) : fill!(σ,1/length(σ))
+    s > 0.0 ? (σ ./= s) : fill!(σ,1/length(σ))
 end
 
 regret_match!(I::AbstractInfoState) = regret_match!(I.σ, I.r)
@@ -121,8 +132,7 @@ function CFR(solver::CFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
             v_σ_Ia[k] = CFR(solver, h′, i, t, I.σ[k]*π_i, π_ni)
             v_σ += I.σ[k]*v_σ_Ia[k]
         end
-        @. I.r += π_ni*(v_σ_Ia - v_σ)
-        @. I.s += π_i*I.σ
+        update!(solver, I, v_σ_Ia, v_σ, t, π_i, π_ni)
     else
         for (k,a) in enumerate(A)
             h′ = next_hist(game, h, a)
@@ -134,13 +144,41 @@ function CFR(solver::CFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
     return v_σ
 end
 
+function update!(sol::CFRSolver{true}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
+    (;α, β, γ) = sol
+    s_coeff = (t/(t+1))^γ
+    for k in eachindex(v_σ_Ia)
+        r = π_ni*(v_σ_Ia[k] - v_σ)
+        r_coeff = if r > 0.0
+            ta = t^α
+            ta/(ta + 1)
+        else
+            tb = t^β
+            tb/(tb + 1)
+        end
+
+        I.r[k] += r
+        I.r[k] *= r_coeff
+
+        I.s[k] += π_i*I.σ[k]
+        I.s[k] *= s_coeff
+    end
+    return nothing
+end
+
+function update!(sol::CFRSolver{false}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
+    @. I.r += π_ni*(v_σ_Ia - v_σ)
+    @. I.s += π_i*I.σ
+    return nothing
+end
+
 function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=()->())
     regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:players(solver.game)
-            CFR(solver, ih, i, t, 1.0, 1.0)
+            CFR(solver, ih, i, t)
         end
         for I in values(solver.I)
             regret_match!(I)
@@ -157,7 +195,7 @@ function train!(solver::DEBUG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=(
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:players(solver.game)
-            CFR(solver, ih, i, t, 1.0, 1.0)
+            CFR(solver, ih, i, t)
         end
         for I in values(solver.I)
             regret_match!(I)

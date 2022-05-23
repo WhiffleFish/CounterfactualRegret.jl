@@ -23,29 +23,13 @@ function MCInfoState(L::Int)
     )
 end
 
-mutable struct DebugMCInfoState <: AbstractInfoState
-    σ::Vector{Float64}
-    r::Vector{Float64}
-    s::Vector{Float64}
-    _tmp_σ::Vector{Float64}
-    hist::Vector{Vector{Float64}}
-    a_idx::Int
-end
-
-function DebugMCInfoState(L::Int)
-    return DebugMCInfoState(
-        fill(1/L, L),
-        zeros(L),
-        fill(1/L, L),
-        fill(1/L, L),
-        Vector{Float64}[],
-        0
-    )
-end
-
-struct ESCFRSolver{K,G,I} <: AbstractCFRSolver{K,G,I}
+struct ESCFRSolver{discount,K,G,I} <: AbstractCFRSolver{K,G,I}
+    dc::Val{discount}
     I::Dict{K, I}
     game::G
+    α::Float64
+    β::Float64
+    γ::Float64
 end
 
 function weighted_sample(rng::AbstractRNG, w::AbstractVector)
@@ -74,12 +58,14 @@ for training history of individual information states to be plotted with
 `Plots.plot(is::DebugInfoState)`
 
 """
-function ESCFRSolver(game::Game{H,K}; debug::Bool=false) where {H,K}
-    if debug
-        return ESCFRSolver(Dict{K, DebugMCInfoState}(), game)
-    else
-        return ESCFRSolver(Dict{K, MCInfoState}(), game)
-    end
+function ESCFRSolver(
+    game::Game{H,K};
+    discount::Bool  = false,
+    alpha::Float64  = 1.0,
+    beta::Float64   = 1.0,
+    gamma::Float64  = 1.0) where {H,K}
+
+    return ESCFRSolver(Val(discount), Dict{K, MCInfoState}(), game, alpha, beta, gamma)
 end
 
 function regret_match!(sol::ESCFRSolver)
@@ -114,8 +100,7 @@ function CFR(solver::ESCFRSolver, h, i, t)
             v_σ += I.σ[k]*v_σ_Ia[k]
         end
 
-        @. I.r += (1 - I.σ)*(v_σ_Ia - v_σ)
-        @. I.s += I.σ
+        update!(solver, I, v_σ_Ia, v_σ, t)
     else
         a_idx = I.a_idx
         iszero(a_idx) && (a_idx = rand(I))
@@ -128,7 +113,26 @@ function CFR(solver::ESCFRSolver, h, i, t)
     return v_σ
 end
 
-function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false, cb=()->()) where {K,G,INFO<:MCInfoState}
+function update!(sol::ESCFRSolver{true}, I, v_σ_Ia, v_σ, t)
+    (;α, β, γ) = sol
+    s_coeff = t^γ
+    for k in eachindex(v_σ_Ia)
+        r = (1 - I.σ[k])*(v_σ_Ia[k] - v_σ)
+        r_coeff = r > 0.0 ? t^α : t^β
+
+        I.r[k] += r_coeff*r
+        I.s[k] += s_coeff*I.σ[k]
+    end
+    return nothing
+end
+
+function update!(sol::ESCFRSolver{false}, I, v_σ_Ia, v_σ, t)
+    @. I.r += (1 - I.σ)*(v_σ_Ia - v_σ)
+    @. I.s += I.σ
+    return nothing
+end
+
+function train!(solver::ESCFRSolver, N::Int; show_progress::Bool=false, cb=()->())
     regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
@@ -137,25 +141,6 @@ function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false
             CFR(solver, ih, i, t)
         end
         regret_match!(solver)
-        cb()
-        next!(prog)
-    end
-    finalize_strategies!(solver)
-end
-
-function train!(solver::ESCFRSolver{K,G,INFO}, N::Int; show_progress::Bool=false, cb=()->()) where {K,G,INFO<:DebugMCInfoState}
-    regret_match!(solver)
-    ih = initialhist(solver.game)
-    prog = Progress(N; enabled=show_progress)
-    for t in 1:N
-        for i in 1:players(solver.game)
-            CFR(solver, ih, i, t)
-        end
-        for I in values(solver.I)
-            regret_match!(I)
-            push!(I.hist, copy(I.s) ./ sum(I.s))
-            I.a_idx = 0
-        end
         cb()
         next!(prog)
     end

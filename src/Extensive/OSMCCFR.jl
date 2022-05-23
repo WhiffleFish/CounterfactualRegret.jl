@@ -1,6 +1,10 @@
-struct OSCFRSolver{K,G,I} <: AbstractCFRSolver{K,G,I}
+struct OSCFRSolver{discount,K,G,I} <: AbstractCFRSolver{K,G,I}
+    dc::Val{discount}
     I::Dict{K, I}
     game::G
+    α::Float64
+    β::Float64
+    γ::Float64
     ϵ::Float64
 end
 
@@ -20,8 +24,15 @@ function OSInfoState(L::Int)
     )
 end
 
-function OSCFRSolver(game::Game{H,K}; ϵ=0.6) where {H,K}
-    return OSCFRSolver(Dict{K, OSInfoState}(), game, ϵ)
+function OSCFRSolver(
+    game::Game{H,K};
+    discount::Bool  = false,
+    alpha::Float64  = 1.0,
+    beta::Float64   = 1.0,
+    gamma::Float64  = 1.0,
+    ϵ::Float64      = 0.6) where {H,K}
+
+    return OSCFRSolver(Val(discount), Dict{K, InfoState}(), game, alpha, beta, gamma, ϵ)
 end
 
 function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, s=1.0)
@@ -71,6 +82,40 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, s=1.0)
 
         return u, π_tail*σ[a_idx]
     end
+end
+
+function regret_update!(sol::OSCFRSolver{true}, I, σ, W, a_idx, π_tail)
+    (;α, β) = sol
+    for k in eachindex(σ)
+        r_k += if k == a_idx
+            W*π_tail*(1 - σ[a_idx])
+        else
+            -W*σ[a_idx]
+        end
+        I.r[k] += if r_k > 0.0
+            (t^α)*r_k
+        else
+            (t^β)*r_k
+        end
+    end
+end
+
+function regret_update!(sol::OSCFRSolver{false}, I, σ, W, a_idx, π_tail)
+    for k in eachindex(σ)
+        I.r[k] += if k == a_idx
+            W*π_tail*(1 - σ[a_idx])
+        else
+            -W*σ[a_idx]
+        end
+    end
+end
+
+function strat_update!(sol::OSCFRSolver{true}, I, σ, π_ni, s)
+    I.s .+= (t^sol.γ)*(π_ni / s) .* σ
+end
+
+function strat_update!(sol::OSCFRSolver{false}, I, σ, π_ni, s)
+    I.s .+= (π_ni / s) .* σ
 end
 
 function train!(solver::OSCFRSolver, N::Int; show_progress::Bool=false, cb=()->())
