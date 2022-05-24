@@ -1,5 +1,3 @@
-using StaticArrays
-
 const PASS = 0
 const BET = 1
 const KuhnInfoKey = Tuple{Int, Int, SVector{3,Int}} # [player, player_card, action_hist]
@@ -23,9 +21,9 @@ struct Kuhn <: Game{Hist, KuhnInfoKey}
     Kuhn() = new([SVector(i,j) for i in 1:3, j in 1:3 if i != j])
 end
 
-CounterfactualRegret.initialhist(::Kuhn) = Hist(SA[0,0], SA[-1,-1,-1])
+CFR.initialhist(::Kuhn) = Hist(SA[0,0], SA[-1,-1,-1])
 
-function CounterfactualRegret.isterminal(::Kuhn, h::Hist) # requires some sequence of actions
+function CFR.isterminal(::Kuhn, h::Hist) # requires some sequence of actions
     L = length(h)
     h = h.action_hist
     if L > 1
@@ -35,7 +33,7 @@ function CounterfactualRegret.isterminal(::Kuhn, h::Hist) # requires some sequen
     end
 end
 
-function CounterfactualRegret.utility(::Kuhn, i::Int, h::Hist)
+function CFR.utility(::Kuhn, i::Int, h::Hist)
     as = h.action_hist
     cards = h.cards
     L = length(as)
@@ -55,7 +53,7 @@ function CounterfactualRegret.utility(::Kuhn, i::Int, h::Hist)
     end
 end
 
-function CounterfactualRegret.player(::Kuhn, h::Hist)
+function CFR.player(::Kuhn, h::Hist)
     if any(iszero, h.cards)
         return 0
     else
@@ -63,39 +61,39 @@ function CounterfactualRegret.player(::Kuhn, h::Hist)
     end
 end
 
-CounterfactualRegret.player(::Kuhn, k::KuhnInfoKey) = first(k)
+CFR.player(::Kuhn, k::KuhnInfoKey) = first(k)
 
-function CounterfactualRegret.chance_actions(game::Kuhn, h::Hist)
+function CFR.chance_actions(game::Kuhn, h::Hist)
     return game.cards
 end
 
-function CounterfactualRegret.chance_action(game::Kuhn, h::Hist)
+function CFR.chance_action(game::Kuhn, h::Hist)
     return rand(game.cards)
 end
 
-function CounterfactualRegret.next_hist(::Kuhn, h, a::SVector{2,Int})
+function CFR.next_hist(::Kuhn, h, a::SVector{2,Int})
     return Hist(a, h.action_hist)
 end
 
-function CounterfactualRegret.next_hist(::Kuhn, h::Hist, a::Int)
+function CFR.next_hist(::Kuhn, h::Hist, a::Int)
     L = length(h)
     action_hist = setindex(h.action_hist, a, L+1)
     return Hist(h.cards, action_hist)
 end
 
 
-function CounterfactualRegret.infokey(g::Kuhn, h::Hist)
+function CFR.infokey(g::Kuhn, h::Hist)
     p = player(g,h)
     card = p > 0 ? h.cards[p] : 0
     return (p, card, h.action_hist) # [player, player_card, action_hist]
 end
 
-CounterfactualRegret.actions(::Kuhn, h::Hist) = PASS:BET
+CFR.actions(::Kuhn, h::Hist) = PASS:BET
 
 
 ## Extra
 
-function Base.print(io::IO, solver::AbstractCFRSolver{K,G}) where {K,G<:Kuhn}
+function Base.print(io::IO, solver::CFR.AbstractCFRSolver{K,G}) where {K,G<:Kuhn}
     println(io)
     for (k,v) in solver.I
         h = k[3]

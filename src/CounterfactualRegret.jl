@@ -33,8 +33,6 @@ export ExploitabilitySolver, exploitability
 include(joinpath("Extensive", "callback.jl"))
 
 # Miscellaneous Games
-include(joinpath("games", "Extensive2Matrix.jl"))
-include(joinpath("games", "IIEMatrix.jl"))
-include(joinpath("games", "Kuhn.jl"))
+include(joinpath("games", "Games.jl"))
 
 end # module

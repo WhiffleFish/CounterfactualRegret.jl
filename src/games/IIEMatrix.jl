@@ -1,5 +1,3 @@
-using StaticArrays
-
 const MAT_INFO_KEY = Int
 
 struct MatHist{N}
@@ -27,35 +25,35 @@ IIEMatrixGame() = IIEMatrixGame([
     (-1,1) (1,-1) (0,0)
 ])
 
-CounterfactualRegret.initialhist(::IIEMatrixGame{N}) where N = MatHist(@SVector zeros(Int,N))
+CFR.initialhist(::IIEMatrixGame{N}) where N = MatHist(@SVector zeros(Int,N))
 
-CounterfactualRegret.isterminal(::IIEMatrixGame, h::MatHist) = length(h) === length(h.h)
+CFR.isterminal(::IIEMatrixGame, h::MatHist) = length(h) === length(h.h)
 
-function CounterfactualRegret.utility(game::IIEMatrixGame{N,T}, i::Int, h::MatHist) where {N,T}
+function CFR.utility(game::IIEMatrixGame{N,T}, i::Int, h::MatHist) where {N,T}
     isterminal(game, h) ? game.R[h.h...][i] : zero(T)
 end
 
-CounterfactualRegret.player(::IIEMatrixGame, h::MatHist) = length(h)+1
+CFR.player(::IIEMatrixGame, h::MatHist) = length(h)+1
 
-CounterfactualRegret.player(::IIEMatrixGame, k::MAT_INFO_KEY) = k+1
+CFR.player(::IIEMatrixGame, k::MAT_INFO_KEY) = k+1
 
-CounterfactualRegret.players(::IIEMatrixGame{N}) where N = N
+CFR.players(::IIEMatrixGame{N}) where N = N
 
-function CounterfactualRegret.next_hist(::IIEMatrixGame, h::MatHist, a)
+function CFR.next_hist(::IIEMatrixGame, h::MatHist, a)
     l = length(h)
     return MatHist(setindex(h.h, a, l+1))
 end
 
-CounterfactualRegret.infokey(::IIEMatrixGame, h) = length(h)
+CFR.infokey(::IIEMatrixGame, h) = length(h)
 
-function CounterfactualRegret.actions(game::IIEMatrixGame, h::MatHist)
+function CFR.actions(game::IIEMatrixGame, h::MatHist)
     return 1:size(game.R, player(game,h))
 end
 
 
 ## extras
 
-function Base.print(io::IO, solver::AbstractCFRSolver{K,G}) where {K,G<:IIEMatrixGame}
+function Base.print(io::IO, solver::CFR.AbstractCFRSolver{K,G}) where {K,G<:IIEMatrixGame}
     println(io)
     for (k,v) in solver.I
         p = player(solver.game, k)
@@ -78,7 +76,7 @@ function cumulative_strategies(hist::Vector{Vector{Float64}})
     return mat
 end
 
-@recipe function f(sol::AbstractCFRSolver{K,G}) where {K,G <: IIEMatrixGame}
+@recipe function f(sol::CFR.AbstractCFRSolver{K,G}) where {K,G <: IIEMatrixGame}
     layout --> 2
     link := :both
     framestyle := [:axes :axes]

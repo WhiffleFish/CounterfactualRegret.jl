@@ -1,4 +1,5 @@
 using CounterfactualRegret
+using CounterfactualRegret.Games
 const CFR = CounterfactualRegret
 using StaticArrays
 using Random

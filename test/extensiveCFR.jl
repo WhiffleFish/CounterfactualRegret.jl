@@ -1,5 +1,3 @@
-using CounterfactualRegret: IIEMatrixGame, Kuhn
-
 function CFRMatrixTest(sol_type, N::Int; atol=0.01, debug=true, kwargs::NamedTuple=(;))
     ## Rock Paper Scissors
     game = IIEMatrixGame([
@@ -39,7 +37,7 @@ function CFRMatrixTest(sol_type, N::Int; atol=0.01, debug=true, kwargs::NamedTup
         @test all( .≈(MC_eval,(-2,-2), atol=atol))
 
     # https://sites.math.northwestern.edu/~clark/364/handouts/bimatrix-mixed.pdf
-    game = CounterfactualRegret.IIEMatrixGame([
+    game = IIEMatrixGame([
         (1,1) (0,0) (0,0);
         (0,0) (0,2) (3,0);
         (0,0) (2,0) (0,3);

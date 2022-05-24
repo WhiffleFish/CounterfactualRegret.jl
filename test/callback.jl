@@ -1,6 +1,6 @@
 @testset "callback" begin
     # Exploitability Callback
-    game = CFR.Kuhn()
+    game = Kuhn()
     sol = CFRSolver(game)
     cb = CFR.ExploitabilityCallback(sol, 100)
     train!(sol, 100_000, cb = cb)
@@ -9,7 +9,7 @@
     @test length(cb.hist.y) == length(cb.hist.x) == 1_000
     @test 0.0 < last(cb.hist.y) < 1e-2
 
-    game = CFR.IIEMatrixGame([(randn(), randn()) for i in 1:5, j in 1:5])
+    game = IIEMatrixGame([(randn(), randn()) for i in 1:5, j in 1:5])
     sol = CFRSolver(game)
     cb = CFR.ExploitabilityCallback(sol, 100)
     train!(sol, 100_000, cb = cb)
