@@ -92,4 +92,6 @@ function players end
 
 players(game::Game) = 2
 
+chance_action(game::Game, h) = rand(chance_actions(game, h))
+
 @inline other_player(i) = 3-i
