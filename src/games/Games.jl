@@ -4,11 +4,10 @@ using ..CounterfactualRegret
 const CFR = CounterfactualRegret
 using StaticArrays
 using RecipesBase
-using LaTeXStrings
 
 include("Extensive2Matrix.jl")
-include("IIEMatrix.jl")
-export IIEMatrixGame
+include("Matrix.jl")
+export MatrixGame
 
 include("Kuhn.jl")
 export Kuhn

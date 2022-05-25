@@ -1,12 +1,7 @@
 module CounterfactualRegret
 
-include(joinpath("Matrix", "MatrixGames.jl"))
-export MatrixGame, MatrixPlayer, clear!, train_both!, train_one!
-export evaluate
-
-
-include(joinpath("Matrix", "CFR.jl"))
-export SimpleIIGame, SimpleIIPlayer
+using ProgressMeter
+using RecipesBase
 
 
 include(joinpath("Extensive", "ExtensiveGames.jl"))
@@ -24,7 +19,7 @@ export train!
 
 
 include(joinpath("Extensive", "evaluation.jl"))
-export FullEvaluate, MonteCarloEvaluate
+export FullEvaluate, MonteCarloEvaluate, evaluate
 
 
 include(joinpath("Extensive", "exploitability.jl"))

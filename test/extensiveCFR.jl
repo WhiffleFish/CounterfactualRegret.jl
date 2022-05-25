@@ -1,6 +1,6 @@
 function CFRMatrixTest(sol_type, N::Int; atol=0.01, debug=true, kwargs::NamedTuple=(;))
     ## Rock Paper Scissors
-    game = IIEMatrixGame([
+    game = MatrixGame([
         (0,0) (-1,1) (1,-1);
         (1,-1) (0,0) (-1,1);
         (-1,1) (1,-1) (0,0)
@@ -19,7 +19,7 @@ function CFRMatrixTest(sol_type, N::Int; atol=0.01, debug=true, kwargs::NamedTup
         @test all( .≈(MC_eval,(0,0), atol=atol))
 
     ## Prisoners Dilemma
-    game = IIEMatrixGame([
+    game = MatrixGame([
         (-1,-1) (-3,0);
         (0,-3) (-2,-2)
     ])
@@ -37,7 +37,7 @@ function CFRMatrixTest(sol_type, N::Int; atol=0.01, debug=true, kwargs::NamedTup
         @test all( .≈(MC_eval,(-2,-2), atol=atol))
 
     # https://sites.math.northwestern.edu/~clark/364/handouts/bimatrix-mixed.pdf
-    game = IIEMatrixGame([
+    game = MatrixGame([
         (1,1) (0,0) (0,0);
         (0,0) (0,2) (3,0);
         (0,0) (2,0) (0,3);
@@ -137,7 +137,7 @@ function KuhnExploitabilityTest(sol_type, N::Int, tol::Float64=1e-2; kwargs...)
     @test last(cb.hist.y) < tol
 end
 
-@testset "IIE Solvers" begin
+@testset verbose=true "IIE Solvers" begin
     @testset "CFR Matrix" begin CFRMatrixTest(CFRSolver, 100_000) end
     @testset "CFR Kuhn" begin CFRKuhnTest(CFRSolver, 100_000, 0.03) end
     @testset "CFR Kuhn" begin CFRKuhnTest(CFRSolver, 100_000, 0.03; discount=true) end

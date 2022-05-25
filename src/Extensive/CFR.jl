@@ -233,7 +233,7 @@ end
 
     L = length(I.σ)
     labels = Matrix{String}(undef, 1, L)
-    for i in eachindex(labels); labels[i] = L"a_{%$(i)}"; end
+    for i in eachindex(labels); labels[i] = "a$i"; end
 
     @series begin
         subplot := 1

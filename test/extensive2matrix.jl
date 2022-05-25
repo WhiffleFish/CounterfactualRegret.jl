@@ -1,12 +1,12 @@
 @testset "Extensive2Matrix" begin
-    game = IIEMatrixGame()
+    game = MatrixGame()
     mat = Matrix(game)
 
     @test all(
         all(mat[i] .≈ game.R[i]) for i in eachindex(mat, game.R)
     )
 
-    game = IIEMatrixGame([
+    game = MatrixGame([
         (rand(),rand()) ((rand(),rand()))
         (rand(),rand()) ((rand(),rand()))
     ])

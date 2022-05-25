@@ -9,8 +9,6 @@ using Test
 
 Random.seed!(1337)
 
-include(joinpath(@__DIR__, "matrix.jl"))
-
 include(joinpath(@__DIR__, "extensiveCFR.jl"))
 
 include(joinpath(@__DIR__, "plots.jl"))

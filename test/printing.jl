@@ -1,7 +1,7 @@
 @testset "Printing" begin
     io = IOBuffer()
 
-    game = IIEMatrixGame()
+    game = MatrixGame()
     sol = ESCFRSolver(game)
     train!(sol, 100_000)
 
