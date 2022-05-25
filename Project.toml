@@ -1,20 +1,16 @@
 name = "CounterfactualRegret"
 uuid = "9fefe0b7-a0d5-4e12-a8ed-3472cccdfc49"
 authors = ["WhiffleFish <tylertronics@gmail.com>"]
-version = "0.3.1"
+version = "0.4.0"
 
 [deps]
-LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
-PushVectors = "36b54c61-190e-5a5f-82d5-6f0a962d7362"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-LaTeXStrings = "1.3"
 ProgressMeter = "1.7"
-PushVectors = "0.2.1"
 RecipesBase = "1.0"
 StaticArrays = "1.2"
-julia = "1"
+julia = "1.7"
