@@ -11,6 +11,8 @@
 | `ESCFRSolver` | External Sampling  |
 | `OSCFRSolver` | Outcome Sampling   |
 
+Each solver takes optional kwarg `method`, which can be either `:vanilla`, `:plus`, or `:discount`, which correspond to Vanilla CFR, CFR+, and DCFR respectively.
+
 ## Solving a Matrix Game
 
 ```julia
@@ -41,7 +43,7 @@ plot(cb, lw=2)
 
 ```julia
 game = Kuhn()
-sol = ESCFRSolver(game; discount=true, alpha=1.0, beta=1.0, gamma=1.0)
+sol = ESCFRSolver(game; method=:discount, alpha=1.0, beta=1.0, gamma=1.0)
 cb = CFR.ExploitabilityCallback(sol)
 train!(sol, 100_001; cb=cb)
 
