@@ -13,7 +13,7 @@ function Base.length(h::MatHist)
     return l
 end
 
-struct MatrixGame{N,T} <: Game{MatHist, MAT_INFO_KEY}
+struct MatrixGame{N,T} <: Game{MatHist{N}, MAT_INFO_KEY}
     R::Array{NTuple{N,T}, N}
 end
 

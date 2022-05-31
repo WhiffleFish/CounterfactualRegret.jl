@@ -15,8 +15,6 @@ function CFRMatrixTest(sol_type, N::Int; atol=0.01, debug=true, kwargs::NamedTup
         @test ≈(s2, fill(1/3,3), atol=atol)
     F_eval = evaluate(sol)
         @test all( .≈(F_eval,(0,0), atol=atol))
-    MC_eval = MonteCarloEvaluate(sol,1)
-        @test all( .≈(MC_eval,(0,0), atol=atol))
 
     ## Prisoners Dilemma
     game = MatrixGame([
@@ -33,8 +31,6 @@ function CFRMatrixTest(sol_type, N::Int; atol=0.01, debug=true, kwargs::NamedTup
         @test ≈(s2, [0,1], atol=atol)
     F_eval = evaluate(sol)
         @test all( .≈(F_eval,(-2,-2), atol=atol))
-    MC_eval = MonteCarloEvaluate(sol,1)
-        @test all( .≈(MC_eval,(-2,-2), atol=atol))
 
     # https://sites.math.northwestern.edu/~clark/364/handouts/bimatrix-mixed.pdf
     game = MatrixGame([
@@ -65,18 +61,13 @@ function CFRMatrixTest(sol_type, N::Int; atol=0.01, debug=true, kwargs::NamedTup
         all( .≈(F_eval,(6/11,6/11), atol=atol)) ||
         all( .≈(F_eval,(1,1), atol=atol))
     end
-    MC_eval = MonteCarloEvaluate(sol,1)
-    @test begin
-        all( .≈(F_eval,(6/5,6/5), atol=atol)) ||
-        all( .≈(F_eval,(6/11,6/11), atol=atol)) ||
-        all( .≈(F_eval,(1,1), atol=atol))
-    end
 
     if debug
         sol = sol_type(game; debug=true, kwargs...)
         train!(sol, 100_000)
 
-        @test CFR.infokeytype(sol) == Int
+        @test CFR.infokeytype(sol) === Int
+        @test CFR.histtype(game) === Games.MatHist{2}
     end
 end
 
@@ -138,23 +129,35 @@ function KuhnExploitabilityTest(sol_type, N::Int, tol::Float64=1e-2; kwargs...)
 end
 
 @testset verbose=true "IIE Solvers" begin
-    @testset "CFR Matrix" begin CFRMatrixTest(CFRSolver, 100_000) end
-    @testset "CFR Kuhn" begin CFRKuhnTest(CFRSolver, 100_000, 0.03) end
-    @testset "CFR Kuhn" begin CFRKuhnTest(CFRSolver, 100_000, 0.03; method=:discount) end
-    @testset "CFR Kuhn" begin CFRKuhnTest(CFRSolver, 100_000, 0.03; method=:plus) end
+    @testset "CFR" begin
+        @test_throws ErrorException CFRSolver(Kuhn(); method=:ayyylmao)
+        CFRMatrixTest(CFRSolver, 100_000)
+        CFRKuhnTest(CFRSolver, 100_000, 0.03)
+        CFRKuhnTest(CFRSolver, 100_000, 0.03; method=:discount)
+        CFRKuhnTest(CFRSolver, 100_000, 0.03; method=:plus)
+    end
 
-    @testset "CSCFR Matrix" begin CFRMatrixTest(CSCFRSolver, 100_000) end
-    @testset "CSCFR Kuhn" begin CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03) end
-    @testset "CSCFR Kuhn" begin CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03; method=:discount) end
-    @testset "CSCFR Kuhn" begin CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03; method=:plus) end
+    @testset "CSCFR" begin
+        @test_throws ErrorException CSCFRSolver(Kuhn(); method=:ayyylmao)
+        CFRMatrixTest(CSCFRSolver, 100_000)
+        CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03)
+        CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03; method=:discount)
+        CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03; method=:plus)
+    end
 
-    @testset "ESCFR Matrix" begin CFRMatrixTest(ESCFRSolver, 500_000; debug=false) end
-    @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03) end
-    @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=:discount) end
-    @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=:plus) end
+    @testset "ESCFR" begin
+        @test_throws ErrorException ESCFRSolver(Kuhn(); method=:ayyylmao)
+        CFRMatrixTest(ESCFRSolver, 500_000; debug=false)
+        CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03)
+        CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=:discount)
+        CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=:plus)
+    end
 
-    @testset "OSCFR Matrix" begin CFRMatrixTest(OSCFRSolver, 1_000_000; atol=0.05, debug=false) end
-    @testset "OSCFR Matrix" begin KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2) end
-    @testset "OSCFR Matrix" begin KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; method=:discount) end
-    @testset "OSCFR Matrix" begin KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1.5e-2; method=:plus) end
+    @testset "OSCFR" begin
+        @test_throws ErrorException OSCFRSolver(Kuhn(); method=:ayyylmao)
+        CFRMatrixTest(OSCFRSolver, 1_000_000; atol=0.05, debug=false)
+        KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2)
+        KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; method=:discount)
+        KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1.5e-2; method=:plus)
+    end
 end

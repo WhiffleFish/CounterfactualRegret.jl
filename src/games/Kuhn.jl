@@ -94,11 +94,6 @@ function CFR.player(::Kuhn, h::KuhnHist)
 end
 
 #=
-Player function but for information state - optional
-=#
-CFR.player(::Kuhn, k::KuhnInfoKey) = first(k)
-
-#=
 Non-chance player actions available at some history h
 =#
 CFR.actions(::Kuhn, h::KuhnHist) = PASS:BET

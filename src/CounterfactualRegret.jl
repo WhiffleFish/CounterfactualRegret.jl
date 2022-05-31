@@ -19,7 +19,7 @@ export train!
 
 
 include(joinpath("Extensive", "evaluation.jl"))
-export FullEvaluate, MonteCarloEvaluate, evaluate
+export evaluate
 
 
 include(joinpath("Extensive", "exploitability.jl"))

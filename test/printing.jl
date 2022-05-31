@@ -14,4 +14,12 @@
 
     print(io, sol)
     @test String(take!(io)) isa String
+
+    # ----
+    
+    game = CoinToss()
+    sol = CFRSolver(game)
+    train!(sol, 10_000)
+    print(io, sol)
+    @test String(take!(io)) isa String
 end
