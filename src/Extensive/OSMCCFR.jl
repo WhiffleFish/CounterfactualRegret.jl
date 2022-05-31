@@ -84,10 +84,10 @@ end
 
 function regret_update!(sol::OSCFRSolver{:plus}, I, σ, W, a_idx, π_tail, t)
     for k in eachindex(σ)
-        I.r[k] += if k == a_idx
-            max(W*π_tail*(1 - σ[a_idx]), 0.0)
+        I.r[k] = if k == a_idx
+            max(W*π_tail*(1 - σ[a_idx]) + I.r[k], 0.0)
         else
-            max(-W*σ[a_idx], 0.0)
+            max(-W*σ[a_idx] + I.r[k], 0.0)
         end
     end
 end

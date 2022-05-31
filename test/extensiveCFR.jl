@@ -140,17 +140,21 @@ end
 @testset verbose=true "IIE Solvers" begin
     @testset "CFR Matrix" begin CFRMatrixTest(CFRSolver, 100_000) end
     @testset "CFR Kuhn" begin CFRKuhnTest(CFRSolver, 100_000, 0.03) end
-    @testset "CFR Kuhn" begin CFRKuhnTest(CFRSolver, 100_000, 0.03; discount=true) end
+    @testset "CFR Kuhn" begin CFRKuhnTest(CFRSolver, 100_000, 0.03; method=:discount) end
+    @testset "CFR Kuhn" begin CFRKuhnTest(CFRSolver, 100_000, 0.03; method=:plus) end
 
     @testset "CSCFR Matrix" begin CFRMatrixTest(CSCFRSolver, 100_000) end
     @testset "CSCFR Kuhn" begin CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03) end
-    @testset "CSCFR Kuhn" begin CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03; discount=true) end
+    @testset "CSCFR Kuhn" begin CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03; method=:discount) end
+    @testset "CSCFR Kuhn" begin CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03; method=:plus) end
 
     @testset "ESCFR Matrix" begin CFRMatrixTest(ESCFRSolver, 500_000; debug=false) end
     @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03) end
-    @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; discount=true) end
+    @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=:discount) end
+    @testset "ESCFR Kuhn" begin CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=:plus) end
 
     @testset "OSCFR Matrix" begin CFRMatrixTest(OSCFRSolver, 1_000_000; atol=0.05, debug=false) end
     @testset "OSCFR Matrix" begin KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2) end
-    @testset "OSCFR Matrix" begin KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; discount=true) end
+    @testset "OSCFR Matrix" begin KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; method=:discount) end
+    @testset "OSCFR Matrix" begin KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1.5e-2; method=:plus) end
 end

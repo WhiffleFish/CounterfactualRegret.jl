@@ -99,7 +99,7 @@ function update!(sol::CSCFRSolver{:discount}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
 end
 
 function update!(sol::CSCFRSolver{:plus}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
-    @. I.r += max(π_ni*(v_σ_Ia - v_σ), 0.0)
+    @. I.r = max(π_ni*(v_σ_Ia - v_σ) + I.r, 0.0)
     @. I.s += π_i*I.σ
     return nothing
 end

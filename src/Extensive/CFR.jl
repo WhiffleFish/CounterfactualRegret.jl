@@ -174,7 +174,7 @@ function strat_update!(sol::CFRSolver{:discount}, I, π_i, t)
 end
 
 function regret_update!(sol::CFRSolver{:plus}, I, v_σ_Ia, v_σ, t, π_ni)
-    return @. I.r += max(π_ni*(v_σ_Ia - v_σ), 0.0)
+    return @. I.r = max(π_ni*(v_σ_Ia - v_σ) + I.r, 0.0)
 end
 
 function strat_update!(sol::CFRSolver{:plus}, I, π_i, t)

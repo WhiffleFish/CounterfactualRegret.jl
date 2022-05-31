@@ -131,7 +131,7 @@ function update!(sol::ESCFRSolver{:discount}, I, v_σ_Ia, v_σ, t)
 end
 
 function update!(sol::ESCFRSolver{:plus}, I, v_σ_Ia, v_σ, t)
-    @. I.r += max((1 - I.σ)*(v_σ_Ia - v_σ), 0.0)
+    @. I.r = max((1 - I.σ)*(v_σ_Ia - v_σ) + I.r, 0.0)
     @. I.s += I.σ
     return nothing
 end
