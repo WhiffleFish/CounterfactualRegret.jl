@@ -1,5 +1,5 @@
-struct OSCFRSolver{discount,K,G,I} <: AbstractCFRSolver{K,G,I}
-    dc::Val{discount}
+struct OSCFRSolver{method,K,G,I} <: AbstractCFRSolver{K,G,I}
+    m::Val{method}
     I::Dict{K, I}
     game::G
     α::Float64
@@ -10,13 +10,17 @@ end
 
 function OSCFRSolver(
     game::Game{H,K};
-    discount::Bool  = false,
+    method::Symbol  = :vanilla,
     alpha::Float64  = 1.0,
     beta::Float64   = 1.0,
     gamma::Float64  = 1.0,
     ϵ::Float64      = 0.6) where {H,K}
 
-    return OSCFRSolver(Val(discount), Dict{K, InfoState}(), game, alpha, beta, gamma, ϵ)
+    if method ∈ (:vanilla, :discount, :plus)
+        return OSCFRSolver(Val(method), Dict{K, InfoState}(), game, alpha, beta, gamma, ϵ)
+    else
+        error("method $method ∉ (:vanilla, :discount, :plus)")
+    end
 end
 
 function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, s=1.0)
@@ -62,7 +66,7 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, s=1.0)
     end
 end
 
-function regret_update!(sol::OSCFRSolver{true}, I, σ, W, a_idx, π_tail, t)
+function regret_update!(sol::OSCFRSolver{:discount}, I, σ, W, a_idx, π_tail, t)
     (;α, β) = sol
     for k in eachindex(σ)
         r_k = if k == a_idx
@@ -78,7 +82,17 @@ function regret_update!(sol::OSCFRSolver{true}, I, σ, W, a_idx, π_tail, t)
     end
 end
 
-function regret_update!(sol::OSCFRSolver{false}, I, σ, W, a_idx, π_tail, t)
+function regret_update!(sol::OSCFRSolver{:plus}, I, σ, W, a_idx, π_tail, t)
+    for k in eachindex(σ)
+        I.r[k] += if k == a_idx
+            max(W*π_tail*(1 - σ[a_idx]), 0.0)
+        else
+            max(-W*σ[a_idx], 0.0)
+        end
+    end
+end
+
+function regret_update!(sol::OSCFRSolver{:vanilla}, I, σ, W, a_idx, π_tail, t)
     for k in eachindex(σ)
         I.r[k] += if k == a_idx
             W*π_tail*(1 - σ[a_idx])
@@ -88,11 +102,15 @@ function regret_update!(sol::OSCFRSolver{false}, I, σ, W, a_idx, π_tail, t)
     end
 end
 
-function strat_update!(sol::OSCFRSolver{true}, I, σ, π_ni, s, t)
+function strat_update!(sol::OSCFRSolver{:discount}, I, σ, π_ni, s, t)
     I.s .+= (t^sol.γ)*(π_ni / s) .* σ
 end
 
-function strat_update!(sol::OSCFRSolver{false}, I, σ, π_ni, s, t)
+function strat_update!(sol::OSCFRSolver{:plus}, I, σ, π_ni, s, t)
+    I.s .+= (π_ni / s) .* σ
+end
+
+function strat_update!(sol::OSCFRSolver{:vanilla}, I, σ, π_ni, s, t)
     I.s .+= (π_ni / s) .* σ
 end
 

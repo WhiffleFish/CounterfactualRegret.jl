@@ -2,8 +2,8 @@
 Chance Sampling Counterfactual Regret Minimization
 =#
 
-struct CSCFRSolver{discount,K,G,I} <: AbstractCFRSolver{K,G,I}
-    dc::Val{discount}
+struct CSCFRSolver{method,K,G,I} <: AbstractCFRSolver{K,G,I}
+    m::Val{method}
     I::Dict{K, I}
     game::G
     α::Float64
@@ -24,16 +24,20 @@ for training history of individual information states to be plotted with
 """
 function CSCFRSolver(
     game::Game{H,K};
-    discount::Bool  = false,
+    method::Symbol  = :vanilla,
     alpha::Float64  = 1.0,
     beta::Float64   = 1.0,
     gamma::Float64  = 1.0,
     debug::Bool     = false) where {H,K}
 
-    if debug
-        return CSCFRSolver(Val(discount), Dict{K, DebugInfoState}(), game, alpha, beta, gamma)
+    if method ∈ (:vanilla, :discount, :plus)
+        if debug
+            return CSCFRSolver(Val(method), Dict{K, DebugInfoState}(), game, alpha, beta, gamma)
+        else
+            return CSCFRSolver(Val(method), Dict{K, InfoState}(), game, alpha, beta, gamma)
+        end
     else
-        return CSCFRSolver(Val(discount), Dict{K, InfoState}(), game, alpha, beta, gamma)
+        error("method $method ∉ (:vanilla, :discount, :plus)")
     end
 end
 
@@ -72,7 +76,7 @@ function CFR(solver::CSCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
     return v_σ
 end
 
-function update!(sol::CSCFRSolver{true}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
+function update!(sol::CSCFRSolver{:discount}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
     (;α, β, γ) = sol
     s_coeff = (t/(t+1))^γ
     for k in eachindex(v_σ_Ia)
@@ -94,7 +98,13 @@ function update!(sol::CSCFRSolver{true}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
     return nothing
 end
 
-function update!(sol::CSCFRSolver{false}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
+function update!(sol::CSCFRSolver{:plus}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
+    @. I.r += max(π_ni*(v_σ_Ia - v_σ), 0.0)
+    @. I.s += π_i*I.σ
+    return nothing
+end
+
+function update!(sol::CSCFRSolver{:vanilla}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
     @. I.r += π_ni*(v_σ_Ia - v_σ)
     @. I.s += π_i*I.σ
     return nothing

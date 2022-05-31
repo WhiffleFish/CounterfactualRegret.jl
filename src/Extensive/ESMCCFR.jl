@@ -23,8 +23,8 @@ function MCInfoState(L::Int)
     )
 end
 
-struct ESCFRSolver{discount,K,G,I} <: AbstractCFRSolver{K,G,I}
-    dc::Val{discount}
+struct ESCFRSolver{method,K,G,I} <: AbstractCFRSolver{K,G,I}
+    m::Val{method}
     I::Dict{K, I}
     game::G
     α::Float64
@@ -60,12 +60,16 @@ for training history of individual information states to be plotted with
 """
 function ESCFRSolver(
     game::Game{H,K};
-    discount::Bool  = false,
+    method::Symbol  = :vanilla,
     alpha::Float64  = 1.0,
     beta::Float64   = 1.0,
     gamma::Float64  = 1.0) where {H,K}
 
-    return ESCFRSolver(Val(discount), Dict{K, MCInfoState}(), game, alpha, beta, gamma)
+    if method ∈ (:vanilla, :discount, :plus)
+        return ESCFRSolver(Val(method), Dict{K, MCInfoState}(), game, alpha, beta, gamma)
+    else
+        error("method $method ∉ (:vanilla, :discount, :plus)")
+    end
 end
 
 function regret_match!(sol::ESCFRSolver)
@@ -113,7 +117,7 @@ function CFR(solver::ESCFRSolver, h, i, t)
     return v_σ
 end
 
-function update!(sol::ESCFRSolver{true}, I, v_σ_Ia, v_σ, t)
+function update!(sol::ESCFRSolver{:discount}, I, v_σ_Ia, v_σ, t)
     (;α, β, γ) = sol
     s_coeff = t^γ
     for k in eachindex(v_σ_Ia)
@@ -126,7 +130,13 @@ function update!(sol::ESCFRSolver{true}, I, v_σ_Ia, v_σ, t)
     return nothing
 end
 
-function update!(sol::ESCFRSolver{false}, I, v_σ_Ia, v_σ, t)
+function update!(sol::ESCFRSolver{:plus}, I, v_σ_Ia, v_σ, t)
+    @. I.r += max((1 - I.σ)*(v_σ_Ia - v_σ), 0.0)
+    @. I.s += I.σ
+    return nothing
+end
+
+function update!(sol::ESCFRSolver{:vanilla}, I, v_σ_Ia, v_σ, t)
     @. I.r += (1 - I.σ)*(v_σ_Ia - v_σ)
     @. I.s += I.σ
     return nothing

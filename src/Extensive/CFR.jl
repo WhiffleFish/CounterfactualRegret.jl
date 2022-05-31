@@ -38,8 +38,8 @@ function DebugInfoState(L::Int)
     )
 end
 
-struct CFRSolver{discount,K,G,I} <: AbstractCFRSolver{K,G,I}
-    dc::Val{discount}
+struct CFRSolver{method,K,G,I} <: AbstractCFRSolver{K,G,I}
+    m::Val{method}
     I::Dict{K, I}
     game::G
     α::Float64
@@ -59,16 +59,20 @@ for training history of individual information states to be plotted with
 """
 function CFRSolver(
     game::Game{H,K};
-    discount::Bool  = false,
+    method::Symbol  = :vanilla,
     alpha::Float64  = 1.0,
     beta::Float64   = 1.0,
     gamma::Float64  = 1.0,
     debug::Bool     = false) where {H,K}
 
-    if debug
-        return CFRSolver(Val(discount), Dict{K, DebugInfoState}(), game, alpha, beta, gamma)
+    if method ∈ (:vanilla, :discount, :plus)
+        if debug
+            return CFRSolver(Val(method), Dict{K, DebugInfoState}(), game, alpha, beta, gamma)
+        else
+            return CFRSolver(Val(method), Dict{K, InfoState}(), game, alpha, beta, gamma)
+        end
     else
-        return CFRSolver(Val(discount), Dict{K, InfoState}(), game, alpha, beta, gamma)
+        error("method $method ∉ (:vanilla, :discount, :plus)")
     end
 end
 
@@ -105,8 +109,8 @@ function regret_match!(sol::AbstractCFRSolver)
     end
 end
 
-function CFR(solver::CFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
-    game = solver.game
+function CFR(sol::CFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
+    game = sol.game
     current_player = player(game, h)
 
     if isterminal(game, h)
@@ -115,38 +119,39 @@ function CFR(solver::CFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
         A = chance_actions(game, h)
         s = 0.0
         for a in A
-            s += CFR(solver, next_hist(game, h, a), i, t, π_i, π_ni)
+            s += CFR(sol, next_hist(game, h, a), i, t, π_i, π_ni)
         end
         return s / length(A)
     end
 
-    I = infoset(solver, h)
+    I = infoset(sol, h)
     A = actions(game, h)
 
     v_σ = 0.0
     v_σ_Ia = I._tmp_σ
 
-    if current_player === i
+    if current_player == i
         for (k,a) in enumerate(A)
             h′ = next_hist(game, h, a)
-            v_σ_Ia[k] = CFR(solver, h′, i, t, I.σ[k]*π_i, π_ni)
+            v_σ_Ia[k] = CFR(sol, h′, i, t, I.σ[k]*π_i, π_ni)
             v_σ += I.σ[k]*v_σ_Ia[k]
         end
-        update!(solver, I, v_σ_Ia, v_σ, t, π_i, π_ni)
+        regret_update!(sol, I, v_σ_Ia, v_σ, t, π_ni)
     else
         for (k,a) in enumerate(A)
             h′ = next_hist(game, h, a)
-            v_σ_Ia[k] = CFR(solver, h′, i, t, π_i, I.σ[k]*π_ni)
+            v_σ_Ia[k] = CFR(sol, h′, i, t, π_i, I.σ[k]*π_ni)
             v_σ += I.σ[k]*v_σ_Ia[k]
         end
+        strat_update!(sol, I, π_i, t)
     end
 
     return v_σ
 end
 
-function update!(sol::CFRSolver{true}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
-    (;α, β, γ) = sol
-    s_coeff = (t/(t+1))^γ
+function regret_update!(sol::CFRSolver{:discount}, I, v_σ_Ia, v_σ, t, π_ni)
+    (;α, β) = sol
+
     for k in eachindex(v_σ_Ia)
         r = π_ni*(v_σ_Ia[k] - v_σ)
         r_coeff = if r > 0.0
@@ -159,17 +164,29 @@ function update!(sol::CFRSolver{true}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
 
         I.r[k] += r
         I.r[k] *= r_coeff
-
-        I.s[k] += π_i*I.σ[k]
-        I.s[k] *= s_coeff
     end
-    return nothing
+    return I.r
 end
 
-function update!(sol::CFRSolver{false}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
-    @. I.r += π_ni*(v_σ_Ia - v_σ)
-    @. I.s += π_i*I.σ
-    return nothing
+function strat_update!(sol::CFRSolver{:discount}, I, π_i, t)
+    I.s .+= π_i*I.σ
+    return I.s .*= (t/(t+1))^sol.γ
+end
+
+function regret_update!(sol::CFRSolver{:plus}, I, v_σ_Ia, v_σ, t, π_ni)
+    return @. I.r += max(π_ni*(v_σ_Ia - v_σ), 0.0)
+end
+
+function strat_update!(sol::CFRSolver{:plus}, I, π_i, t)
+    return @. I.s += π_i*I.σ
+end
+
+function regret_update!(sol::CFRSolver{:vanilla}, I, v_σ_Ia, v_σ, t, π_ni)
+    return @. I.r += π_ni*(v_σ_Ia - v_σ)
+end
+
+function strat_update!(sol::CFRSolver{:vanilla}, I, π_i, t)
+    return @. I.s += π_i*I.σ
 end
 
 function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=()->())
