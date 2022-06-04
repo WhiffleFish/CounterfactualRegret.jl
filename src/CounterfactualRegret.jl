@@ -9,6 +9,8 @@ export Game, initialhist, isterminal, utility, player, next_hist, infokey, actio
 export chance_action, chance_actions, other_player
 export infokeytype, histtype
 
+include(joinpath("Extensive", "baselines.jl"))
+export ZeroBaseline, ExpectedValueBaseline
 
 include(joinpath("Extensive", "CFR.jl"))
 include(joinpath("Extensive", "CSMCCFR.jl"))
