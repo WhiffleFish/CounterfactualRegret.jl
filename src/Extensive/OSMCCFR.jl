@@ -1,3 +1,4 @@
+# https://arxiv.org/abs/1809.03057
 struct OSCFRSolver{method,B,K,G,I} <: AbstractCFRSolver{K,G,I}
     m::Val{method}
     baseline::B
@@ -7,6 +8,7 @@ struct OSCFRSolver{method,B,K,G,I} <: AbstractCFRSolver{K,G,I}
     β::Float64
     γ::Float64
     ϵ::Float64
+    d::Int
 end
 
 function OSCFRSolver(
@@ -16,10 +18,11 @@ function OSCFRSolver(
     alpha::Float64  = 1.0,
     beta::Float64   = 1.0,
     gamma::Float64  = 1.0,
-    ϵ::Float64      = 0.6) where {H,K}
+    ϵ::Float64      = 0.6,
+    d::Int          = 0) where {H,K}
 
     if method ∈ (:vanilla, :discount, :plus)
-        return OSCFRSolver(Val(method), baseline, Dict{K, InfoState}(), game, alpha, beta, gamma, ϵ)
+        return OSCFRSolver(Val(method), baseline, Dict{K, InfoState}(), game, alpha, beta, gamma, ϵ, d)
     else
         error("method $method ∉ (:vanilla, :discount, :plus)")
     end
@@ -43,37 +46,32 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, q_h=1.0)
         A = actions(game, h)
         σ = regret_match!(I) # (b)
 
-        σ′ = I._tmp_σ .= ϵ/length(A) .+ (1-ϵ) .* σ
-
-        a_idx = weighted_sample(σ′)
+        a_idx = rand() > ϵ ? weighted_sample(σ) : rand(eachindex(A))
         a = A[a_idx]
+        p_a = σ[a_idx]*(1-ϵ) + ϵ/length(A)
         h′ = next_hist(game, h, a)
 
         K = infokey(game, h)
         b = baseline(K, length(A))
 
-        u = CFR(sol, h′, p, t, π_i*σ[a_idx], π_ni, q_h*σ′[a_idx])
+        u = CFR(sol, h′, p, t, π_i*σ[a_idx], π_ni, q_h*p_a)
 
-        ûbσha = Vector{Float64}(undef, length(A))
+        ûbσha = I._tmp_σ
 
+        ûbσh = 0.0
         for (k,a) in enumerate(A)
             bIa = b[k]
             ûbσha[k] = if k == a_idx
-                ξha = σ′[k]
+                ξha = p_a
                 bIa + ((u - bIa) / ξha)
             else
                 bIa
             end
-        end
-
-        ûbσh = 0.0
-        for (k,a) in enumerate(A) # (c)
             ûbσh += σ[k]*ûbσha[k]
         end
 
-        ûbσIa = (π_ni / q_h) * ûbσha
         ûbσI = 0.0
-
+        ûbσIa = ûbσha .*= (π_ni / q_h)
         for k in eachindex(ûbσIa) # (d)
             ûbσI += σ[k]*ûbσIa[k]
         end
@@ -97,21 +95,16 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, q_h=1.0)
 
         u = CFR(sol, h′, p, t, π_i, π_ni*σ[a_idx], q_h*σ[a_idx])
 
-        ûbσha = Vector{Float64}(undef, length(A))
-
+        ûbσh = 0.0
         for (k,a) in enumerate(A)
             bIa = b[k]
-            ûbσha[k] = if k == a_idx
+            ûbσha = if k == a_idx
                 ξha = σ[k]
                 bIa + (u - bIa) / ξha
             else
                 bIa
             end
-        end
-
-        ûbσh = 0.0
-        for (k,a) in enumerate(A) # (c)
-            ûbσh += σ[k]*ûbσha[k]
+            ûbσh += σ[k]*ûbσha
         end
 
         strat_update!(sol, I, σ, π_ni, q_h, t)
@@ -141,15 +134,15 @@ function regret_update!(sol::OSCFRSolver{:vanilla}, r, ûbσIa, ûbσI, t)
 end
 
 function strat_update!(sol::OSCFRSolver{:discount}, I, σ, π_ni, q_h, t)
-    I.s .+= (t^sol.γ)*(π_ni / q_h) .* σ
+    @. I.s += (t^sol.γ)*(π_ni / q_h) * σ
 end
 
 function strat_update!(sol::OSCFRSolver{:plus}, I, σ, π_ni, q_h, t)
-    I.s .+= (π_ni / q_h) .* σ
+    @. I.s += (π_ni / q_h) * t * σ
 end
 
 function strat_update!(sol::OSCFRSolver{:vanilla}, I, σ, π_ni, q_h, t)
-    I.s .+= (π_ni / q_h) .* σ
+    @. I.s += (π_ni / q_h) * σ
 end
 
 function train!(solver::OSCFRSolver, N::Int; show_progress::Bool=false, cb=()->())
@@ -157,7 +150,7 @@ function train!(solver::OSCFRSolver, N::Int; show_progress::Bool=false, cb=()->(
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:players(solver.game)
-            CFR(solver, ih, i, t)
+            CFR(solver, ih, i, max(t-solver.d,0))
         end
         cb()
         next!(prog)

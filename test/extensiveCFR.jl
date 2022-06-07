@@ -157,6 +157,7 @@ end
         @test_throws ErrorException OSCFRSolver(Kuhn(); method=:ayyylmao)
         CFRMatrixTest(OSCFRSolver, 1_000_000; atol=0.05, debug=false)
         KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2)
+        KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; baseline=ExpectedValueBaseline(Kuhn()))
         KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; method=:discount)
         KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1.5e-2; method=:plus)
     end
