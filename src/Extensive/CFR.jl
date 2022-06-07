@@ -45,6 +45,7 @@ struct CFRSolver{method,K,G,I} <: AbstractCFRSolver{K,G,I}
     α::Float64
     β::Float64
     γ::Float64
+    d::Int
 end
 
 """
@@ -63,13 +64,14 @@ function CFRSolver(
     alpha::Float64  = 1.0,
     beta::Float64   = 1.0,
     gamma::Float64  = 1.0,
+    d::Int          = 0,
     debug::Bool     = false) where {H,K}
 
     if method ∈ (:vanilla, :discount, :plus)
         if debug
-            return CFRSolver(Val(method), Dict{K, DebugInfoState}(), game, alpha, beta, gamma)
+            return CFRSolver(Val(method), Dict{K, DebugInfoState}(), game, alpha, beta, gamma, d)
         else
-            return CFRSolver(Val(method), Dict{K, InfoState}(), game, alpha, beta, gamma)
+            return CFRSolver(Val(method), Dict{K, InfoState}(), game, alpha, beta, gamma, d)
         end
     else
         error("method $method ∉ (:vanilla, :discount, :plus)")
@@ -117,11 +119,12 @@ function CFR(sol::CFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
         return utility(game, i, h)
     elseif iszero(current_player) # chance player
         A = chance_actions(game, h)
+        iLa = inv(length(A))
         s = 0.0
         for a in A
-            s += CFR(sol, next_hist(game, h, a), i, t, π_i, π_ni)
+            s += CFR(sol, next_hist(game, h, a), i, t, π_i, π_ni*iLa)
         end
-        return s / length(A)
+        return s * iLa
     end
 
     I = infoset(sol, h)
@@ -178,7 +181,7 @@ function regret_update!(sol::CFRSolver{:plus}, I, v_σ_Ia, v_σ, t, π_ni)
 end
 
 function strat_update!(sol::CFRSolver{:plus}, I, π_i, t)
-    return @. I.s += π_i*I.σ
+    return @. I.s += t*π_i*I.σ
 end
 
 function regret_update!(sol::CFRSolver{:vanilla}, I, v_σ_Ia, v_σ, t, π_ni)
@@ -195,7 +198,7 @@ function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=()-
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:players(solver.game)
-            CFR(solver, ih, i, t)
+            CFR(solver, ih, i, max(t-solver.d,0))
         end
         regret_match!(solver)
         cb()
@@ -210,7 +213,7 @@ function train!(solver::DEBUG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=(
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:players(solver.game)
-            CFR(solver, ih, i, t)
+            CFR(solver, ih, i, max(t-solver.d,0))
         end
         for I in values(solver.I)
             regret_match!(I)

@@ -30,6 +30,7 @@ struct ESCFRSolver{method,K,G,I} <: AbstractCFRSolver{K,G,I}
     α::Float64
     β::Float64
     γ::Float64
+    d::Int
 end
 
 function weighted_sample(rng::AbstractRNG, w::AbstractVector)
@@ -63,10 +64,11 @@ function ESCFRSolver(
     method::Symbol  = :vanilla,
     alpha::Float64  = 1.0,
     beta::Float64   = 1.0,
-    gamma::Float64  = 1.0) where {H,K}
+    gamma::Float64  = 1.0,
+    d::Int          = 0) where {H,K}
 
     if method ∈ (:vanilla, :discount, :plus)
-        return ESCFRSolver(Val(method), Dict{K, MCInfoState}(), game, alpha, beta, gamma)
+        return ESCFRSolver(Val(method), Dict{K, MCInfoState}(), game, alpha, beta, gamma, d)
     else
         error("method $method ∉ (:vanilla, :discount, :plus)")
     end
@@ -132,7 +134,7 @@ end
 
 function update!(sol::ESCFRSolver{:plus}, I, v_σ_Ia, v_σ, t)
     @. I.r = max((1 - I.σ)*(v_σ_Ia - v_σ) + I.r, 0.0)
-    @. I.s += I.σ
+    @. I.s += t*I.σ
     return nothing
 end
 
@@ -148,7 +150,7 @@ function train!(solver::ESCFRSolver, N::Int; show_progress::Bool=false, cb=()->(
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:players(solver.game)
-            CFR(solver, ih, i, t)
+            CFR(solver, ih, i, max(t-solver.d,0))
         end
         regret_match!(solver)
         cb()

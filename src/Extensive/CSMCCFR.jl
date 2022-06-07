@@ -9,6 +9,7 @@ struct CSCFRSolver{method,K,G,I} <: AbstractCFRSolver{K,G,I}
     α::Float64
     β::Float64
     γ::Float64
+    d::Int
 end
 
 
@@ -28,13 +29,14 @@ function CSCFRSolver(
     alpha::Float64  = 1.0,
     beta::Float64   = 1.0,
     gamma::Float64  = 1.0,
+    d::Int          = 0,
     debug::Bool     = false) where {H,K}
 
     if method ∈ (:vanilla, :discount, :plus)
         if debug
-            return CSCFRSolver(Val(method), Dict{K, DebugInfoState}(), game, alpha, beta, gamma)
+            return CSCFRSolver(Val(method), Dict{K, DebugInfoState}(), game, alpha, beta, gamma, d)
         else
-            return CSCFRSolver(Val(method), Dict{K, InfoState}(), game, alpha, beta, gamma)
+            return CSCFRSolver(Val(method), Dict{K, InfoState}(), game, alpha, beta, gamma, d)
         end
     else
         error("method $method ∉ (:vanilla, :discount, :plus)")
@@ -48,9 +50,10 @@ function CFR(solver::CSCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
     if isterminal(game, h)
         return utility(game, i, h)
     elseif iszero(current_player) # chance player
-        a = chance_action(game, h)
+        A = chance_actions(game, h)
+        a = rand(A)
         h′ = next_hist(game,h,a)
-        return CFR(solver, h′, i, t, π_i, π_ni)
+        return CFR(solver, h′, i, t, π_i, π_ni*inv(length(A)))
     end
     I = infoset(solver, h)
     A = actions(game, h)
@@ -100,7 +103,7 @@ end
 
 function update!(sol::CSCFRSolver{:plus}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
     @. I.r = max(π_ni*(v_σ_Ia - v_σ) + I.r, 0.0)
-    @. I.s += π_i*I.σ
+    @. I.s += t*π_i*I.σ
     return nothing
 end
 
