@@ -15,4 +15,8 @@ export Kuhn
 include("CoinToss.jl")
 export CoinToss
 
+function observation end
+include("tree_builder.jl")
+export observation, GameTree
+
 end

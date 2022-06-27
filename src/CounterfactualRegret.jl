@@ -17,7 +17,7 @@ include(joinpath("Extensive", "CSMCCFR.jl"))
 include(joinpath("Extensive", "ESMCCFR.jl"))
 include(joinpath("Extensive", "OSMCCFR.jl"))
 export CFRSolver, CSCFRSolver, ESCFRSolver, OSCFRSolver
-export train!
+export train!, strategy
 
 
 include(joinpath("Extensive", "evaluation.jl"))

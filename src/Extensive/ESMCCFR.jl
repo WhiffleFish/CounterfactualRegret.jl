@@ -13,7 +13,7 @@ mutable struct MCInfoState <: AbstractInfoState
     a_idx::Int
 end
 
-function MCInfoState(L::Int)
+function MCInfoState(L::Integer)
     return MCInfoState(
         fill(1/L, L),
         zeros(L),

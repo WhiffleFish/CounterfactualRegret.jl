@@ -3,6 +3,7 @@
 struct FillVec{T} <: AbstractVector{T}
     val::T
     len::Int
+    FillVec(val, len) = new{typeof(val)}(val, Int(len))
 end
 
 @inline Base.length(v::FillVec) = v.len
@@ -16,7 +17,7 @@ end
 
 struct ZeroBaseline end
 
-(::ZeroBaseline)(I, l::Int) = FillVec(0.0, l)
+(::ZeroBaseline)(I, l::Integer) = FillVec(0.0, l)
 
 update!(::ZeroBaseline, I, û) = 0.0
 
@@ -31,7 +32,7 @@ function ExpectedValueBaseline(::Game{H,K}, α=0.5) where {H,K}
     return ExpectedValueBaseline(Dict{K,Vector{Float64}}(), α)
 end
 
-function (b::ExpectedValueBaseline{K})(I::K, l::Int) where K
+function (b::ExpectedValueBaseline{K})(I::K, l::Integer) where K
     return get!(b.d, I) do
         zeros(Float64, l)
     end

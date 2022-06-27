@@ -11,7 +11,7 @@ struct InfoState <: AbstractInfoState
     _tmp_σ::Vector{Float64}
 end
 
-function InfoState(L::Int)
+function InfoState(L::Integer)
     return InfoState(
         fill(1/L, L),
         zeros(L),
@@ -28,7 +28,7 @@ struct DebugInfoState <: AbstractInfoState
     hist::Vector{Vector{Float64}}
 end
 
-function DebugInfoState(L::Int)
+function DebugInfoState(L::Integer)
     return DebugInfoState(
         fill(1/L, L),
         zeros(L),
