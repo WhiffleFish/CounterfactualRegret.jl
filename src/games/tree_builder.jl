@@ -85,7 +85,7 @@ function _build_tree(tree::GameTree, parent::TreeHist)
     A = iszero(p) ? chance_actions(game, parent.h) : actions(game, parent.h)
 
     for (i,a) in enumerate(A)
-        obs_hist = deepcopy(parent.obs_hist)
+        obs_hist = (copy(parent.obs_hist[1]), copy(parent.obs_hist[2]))
         h′ = next_hist(game, parent.h, a)
         o = observation(game, parent.h, a, h′)
 
@@ -105,22 +105,16 @@ end
 
 CFR.initialhist(g::GameTree) = first(g.nodes)
 
-CFR.player(h::TreeHist) = h.player
 CFR.player(::GameTree, h::TreeHist) = h.player
 
-CFR.chance_actions(h::TreeHist) = h.actions
 CFR.chance_actions(::GameTree, h::TreeHist) = h.actions
 
-CFR.actions(h::TreeHist) = h.actions
 CFR.actions(::GameTree, h::TreeHist) = h.actions
 
-CFR.isterminal(h::TreeHist) = h.terminal
 CFR.isterminal(::GameTree, h::TreeHist) = h.terminal
 
-CFR.utility(h::TreeHist, i) = h.utility[i]
 CFR.utility(::GameTree, i, h::TreeHist) = h.utility[i]
 
 CFR.next_hist(g::GameTree, h::TreeHist, a::UInt) = g.nodes[h.children[a]]
 
-CFR.infokey(h::TreeHist) = h.infokey
 CFR.infokey(::GameTree, h::TreeHist) = h.infokey

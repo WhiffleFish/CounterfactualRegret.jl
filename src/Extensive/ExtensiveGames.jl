@@ -90,6 +90,14 @@ Returns number of players in game (excluding chance player)
 """
 function players end
 
+"""
+    `observation(game, h, a, h′)`
+
+For tree building - information given to acting player in history `h`
+
+"""
+function observation end
+
 players(game::Game) = 2
 
 chance_action(game::Game, h) = rand(chance_actions(game, h))
