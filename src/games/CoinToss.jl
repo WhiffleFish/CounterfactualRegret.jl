@@ -71,3 +71,25 @@ CFR.initialhist(::CoinToss) = TossHist(@SVector(zeros(Int,2)), :null)
 CFR.next_hist(::CoinToss, h::TossHist, a::Symbol) = TossHist(h.h, a)
 
 CFR.player(::CoinToss, h) = length(h)
+
+function CFR.vectorized_hist(::CoinToss, h::TossHist)
+    flip = if h.flip === :heads
+        1
+    elseif h.flip === :tails
+        0
+    else
+        -1
+    end
+    return SA[h.h...,flip]
+end
+
+function CFR.vectorized_info(::CoinToss, I::TossInfoState)
+    flip = if I.flip === :heads
+        1
+    elseif I.flip === :tails
+        0
+    else
+        -1
+    end
+    return SA[I.p, flip]
+end

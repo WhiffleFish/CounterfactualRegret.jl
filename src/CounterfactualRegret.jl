@@ -9,6 +9,7 @@ export Game, initialhist, isterminal, utility, player, next_hist, infokey, actio
 export observation
 export chance_action, chance_actions, other_player
 export infokeytype, histtype
+export vectorized_hist, vectorized_info
 
 include(joinpath("Extensive", "baselines.jl"))
 export ZeroBaseline, ExpectedValueBaseline

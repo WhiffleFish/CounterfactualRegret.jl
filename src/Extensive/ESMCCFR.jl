@@ -135,13 +135,11 @@ end
 function update!(sol::ESCFRSolver{:plus}, I, v_σ_Ia, v_σ, t)
     @. I.r = max((1 - I.σ)*(v_σ_Ia - v_σ) + I.r, 0.0)
     @. I.s += t*I.σ
-    return nothing
 end
 
 function update!(sol::ESCFRSolver{:vanilla}, I, v_σ_Ia, v_σ, t)
     @. I.r += (1 - I.σ)*(v_σ_Ia - v_σ)
     @. I.s += I.σ
-    return nothing
 end
 
 function train!(solver::ESCFRSolver, N::Int; show_progress::Bool=false, cb=()->())

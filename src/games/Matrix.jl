@@ -51,6 +51,10 @@ end
 
 ## extras
 
+CFR.vectorized_hist(::MatrixGame, h::MatHist) = h.h
+
+CFR.vectorized_info(::MatrixGame, I::Int) = SA[Float32(I)]
+
 function Base.print(io::IO, solver::CFR.AbstractCFRSolver{K,G}) where {K,G<:MatrixGame}
     println(io)
     for (k,v) in solver.I

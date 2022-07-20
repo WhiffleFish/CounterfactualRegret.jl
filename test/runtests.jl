@@ -22,3 +22,5 @@ include(joinpath(@__DIR__, "exploitability.jl"))
 include(joinpath(@__DIR__, "callback.jl"))
 
 include(joinpath(@__DIR__, "tree_building.jl"))
+
+include(joinpath(@__DIR__, "vectorized.jl"))

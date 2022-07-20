@@ -98,6 +98,21 @@ For tree building - information given to acting player in history `h`
 """
 function observation end
 
+"""
+For converting information state representation to vector.
+Default behavior returns unmodified information state.
+"""
+function vectorized_info end
+
+"""
+For converting history representation to vector.
+Default behavior returns unmodified history.
+"""
+function vectorized_hist end
+
+vectorized_info(game::Game, I) = I
+vectorized_hist(game::Game, h) = h
+
 players(game::Game) = 2
 
 chance_action(game::Game, h) = rand(chance_actions(game, h))

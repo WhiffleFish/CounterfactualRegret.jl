@@ -139,6 +139,19 @@ end
 
 ## Extra
 
+function CFR.vectorized_hist(::Kuhn, h::KuhnHist)
+    (;cards, action_hist) = h
+    c = convert(SVector{2,Float32}, cards)
+    a = convert(SVector{3,Float32}, action_hist)
+    SA[c..., a...]
+end
+
+function CFR.vectorized_info(::Kuhn, I::Tuple)
+    p, pc, hist = I
+    h = convert(SVector{3,Float32}, hist)
+    SA[Float32(p), Float32(pc), h...]
+end
+
 function Base.print(io::IO, solver::CFR.AbstractCFRSolver{K,G}) where {K,G<:Kuhn}
     println(io)
     for (k,v) in solver.I
