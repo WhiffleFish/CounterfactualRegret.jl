@@ -2,7 +2,7 @@
     `evaluate(solver::AbstractCFRSolver)`
 
 Evaluate full tree traversed by CFR solver. \n
-Returns tuple corresponding to utilities for both players.
+Returns tuple corresponding to game values for players given the strategies provided by the solver.
 """
 function evaluate(sol::AbstractCFRSolver)
     return Tuple(evaluate(sol, p) for p in 1:players(sol.game))

@@ -50,14 +50,22 @@ Random.rand(I::AbstractInfoState) = weighted_sample(I.σ)
 
 
 """
-    `ESCFRSolver(game::Game{H,K}; debug::Bool=false)`
+    `ESCFRSolver(game::Game; method::Symbol=:vanilla, alpha::Float64 = 1.0, beta::Float64 = 1.0, gamma::Float64 = 1.0, d::Int)`
 
 Instantiate external sampling CFR solver with some `game`.
 
-If `debug=true`, record history of strategies over training period, allowing
-for training history of individual information states to be plotted with
-`Plots.plot(is::DebugInfoState)`
+Samples a single actions from all players for single tree traversal.
+Time to complete a traversal is O(|𝒜ᵢ|ᵈ), where d is the depth of the game and |𝒜ᵢ| is the size of the action space
+for the acting player.
 
+
+Available methods:
+- `:vanilla` default (Zinkevich 2009)
+- `:discount` uses `alpha`, `beta`, `gamma` kwargs for discounted ESCFR (Brown 2019)
+    - `alpha`   - discount on positive regret
+    - `beta`    - discount on negative regret
+    - `gamma`   - discount on strategy 
+- `:plus` employs ESCFR+ with linear weighting and initial weighting threshold `d` (Tammelin 2014)
 """
 function ESCFRSolver(
     game::Game{H,K};

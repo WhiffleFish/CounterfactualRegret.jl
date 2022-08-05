@@ -1,6 +1,18 @@
 abstract type Game{H,K} end
 
+
+"""
+    `infokeytype(g::Game)`
+
+Returns information key type for game `g`
+"""
 infokeytype(::Game{H,K}) where {H,K} = K
+
+"""
+    `histtype(g::Game)`
+
+Returns history type for game `g`
+"""
 histtype(::Game{H,K}) where {H,K} = H
 
 """
@@ -99,12 +111,16 @@ For tree building - information given to acting player in history `h`
 function observation end
 
 """
+    `vectorized_info(game::Game{H,K}, key::K) where {H,K}`
+
 For converting information state representation to vector.
 Default behavior returns unmodified information state.
 """
 function vectorized_info end
 
 """
+    `vectorized_hist(game::Game{H}, h::H) where H`
+
 For converting history representation to vector.
 Default behavior returns unmodified history.
 """

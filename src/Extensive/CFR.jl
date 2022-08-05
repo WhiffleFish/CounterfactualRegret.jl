@@ -4,6 +4,23 @@ abstract type AbstractCFRSolver{K,G<:Game,I<:AbstractInfoState} <: IIESolver end
 
 infokeytype(::AbstractCFRSolver{K}) where K = K
 
+"""
+    `strategy(sol::AbstractCFRSolver, k)`
+
+Return the current strategy of solver `sol` for information key `k`
+
+If sufficiently trained ([`train!`](@ref)), this should be close to a Nash Equilibrium strategy.
+"""
+function strategy end
+
+"""
+    `train!(sol::AbstractCFRSolver, n; cb=()->(), show_progress::Bool=false)`
+
+Train a CFR solver for `n` iterations with optional callbacks `cb` and optional progress bar `show_progress`
+"""
+function train! end
+
+
 struct InfoState <: AbstractInfoState
     σ::Vector{Float64}
     r::Vector{Float64}
@@ -49,7 +66,7 @@ struct CFRSolver{method,K,G,I} <: AbstractCFRSolver{K,G,I}
 end
 
 """
-    `CFRSolver(game::Game{H,K}; debug::Bool=false)`
+    `CFRSolver(game::Game; debug::Bool=false, method::Symbol=:vanilla, alpha::Float64 = 1.0, beta::Float64 = 1.0, gamma::Float64 = 1.0, d::Int)`
 
 Instantiate vanilla CFR solver with some `game`.
 
@@ -57,6 +74,13 @@ If `debug=true`, record history of strategies over training period, allowing
 for training history of individual information states to be plotted with
 `Plots.plot(is::DebugInfoState)`
 
+Available methods:
+- `:vanilla` default (Zinkevich 2009)
+- `:discount` uses `alpha`, `beta`, `gamma` kwargs for discounted CFR (Brown 2019)
+    - `alpha`   - discount on positive regret
+    - `beta`    - discount on negative regret
+    - `gamma`   - discount on strategy 
+- `:plus` employs CFR+ with linear weighting and initial weighting threshold `d` (Tammelin 2014)
 """
 function CFRSolver(
     game::Game{H,K};

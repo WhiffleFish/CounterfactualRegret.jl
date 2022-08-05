@@ -1,4 +1,3 @@
-
 "want simple vector-like behavior without allocating"
 struct FillVec{T} <: AbstractVector{T}
     val::T
@@ -15,6 +14,9 @@ end
     return v.val
 end
 
+"""
+Default static baseline of 0 - equivalent to not using a baseline
+"""
 struct ZeroBaseline end
 
 (::ZeroBaseline)(I, l::Integer) = FillVec(0.0, l)
@@ -23,6 +25,17 @@ update!(::ZeroBaseline, I, û) = 0.0
 
 # ----------------------------------------
 
+"""
+Expected Value Baseline (Schmid 2018)
+
+Uses aggregation counterfactual value estimates from previous runs as a
+baseline. "Learning rate" or exponential decay rate for learning the baseline
+is given by paramter α.
+
+The stored action values for some information key `k` are retrieved by calling
+`(b::ExpectedValueBaseline{K})(k, l)`, where `l` is the length of the action space
+at the given information state represented by `k`.
+"""
 struct ExpectedValueBaseline{K}
     d::Dict{K,Vector{Float64}}
     α::Float64

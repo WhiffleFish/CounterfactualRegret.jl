@@ -13,6 +13,13 @@ function Base.length(h::MatHist)
     return l
 end
 
+"""
+Matrix game of arbitrary dimensionality
+
+Defaults to 2-player zero-sum rock-paper-scissors
+
+- NOTE: N>2 player general-sum games have ill-defined convergence properties for counterfactual regret solvers
+"""
 struct MatrixGame{N,T} <: Game{MatHist{N}, MAT_INFO_KEY}
     R::Array{NTuple{N,T}, N}
 end

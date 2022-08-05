@@ -9,6 +9,25 @@ function Base.push!(h::ExploitabilityHistory, x, y)
     push!(h.y, y)
 end
 
+"""
+
+```
+ExploitabilityCallback(sol::AbstractCFRSolver, n::Int=1; p::Int=1)
+```
+- `sol` : 
+- `n`   : Frequency with which to query exploitability e.g. `n=10` indicates checking exploitability every 10 CFR iterations
+- `p`   : Player whose exploitability is being measured
+
+Usage:
+```
+using CounterfactualRegret
+const CFR = CounterfactualRegret
+
+game = CFR.Games.Kuhn()
+sol = CFRSolver(game)
+train!(sol, 10_000, cb=ExploitabilityCallback(sol))
+```
+"""
 mutable struct ExploitabilityCallback{SOL<:AbstractCFRSolver, ESOL<:ExploitabilitySolver}
     sol::SOL
     e_sol::ESOL
@@ -41,6 +60,15 @@ end
 
 @recipe f(cb::ExploitabilityCallback) = cb.hist
 
+"""
+
+Wraps a function, causing it to trigger every `n` CFR iterations
+
+```
+test_cb = Throttle(() -> println("test"), 100)
+```
+Above example will print `"test"` every 100 CFR iterations
+"""
 mutable struct Throttle{F}
     f::F
     n::Int
@@ -56,6 +84,23 @@ function (t::Throttle)()
     t.state += 1
 end
 
+
+"""
+Chain together multiple callbacks
+
+Usage:
+```
+using CounterfactualRegret
+const CFR = CounterfactualRegret
+
+
+game = CFR.Games.Kuhn()
+sol = CFRSolver(game)
+exp_cb = ExploitabilityCallback(sol)
+test_cb = Throttle(() -> println("test"), 100)
+train!(sol, 10_000, cb=CFR.CallbackChain(exp_cb, test_cb))
+```
+"""
 struct CallbackChain{T<:Tuple}
 	t::T
 	CallbackChain(args...) = new{typeof(args)}(args)
