@@ -1,6 +1,9 @@
 # CounterfactualRegret.jl
 
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://whifflefish.github.io/CounterfactualRegret.jl/dev/)
+
 [![codecov](https://codecov.io/gh/WhiffleFish/CounterfactualRegret.jl/branch/main/graph/badge.svg?token=X32NBIUN9Z)](https://codecov.io/gh/WhiffleFish/CounterfactualRegret.jl)
+
 
 ## Implemented Solvers
 
