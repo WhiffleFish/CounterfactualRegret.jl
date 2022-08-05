@@ -12,7 +12,7 @@ struct OSCFRSolver{method,B,K,G,I} <: AbstractCFRSolver{K,G,I}
 end
 
 """
-    `CFRSolver(game::Game; method::Symbol=:vanilla, baseline = ZeroBaseline(), alpha::Float64 = 1.0, beta::Float64 = 1.0, gamma::Float64 = 1.0, d::Int, ϵ::Float64 = 0.6,)`
+    OSCFRSolver(game::Game; method::Symbol=:vanilla, baseline = ZeroBaseline(), alpha::Float64 = 1.0, beta::Float64 = 1.0, gamma::Float64 = 1.0, d::Int, ϵ::Float64 = 0.6,)
 
 Instantiate outcome sampling CFR solver with some `game`.
 

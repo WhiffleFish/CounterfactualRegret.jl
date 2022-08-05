@@ -1,5 +1,5 @@
 """
-    `evaluate(solver::AbstractCFRSolver)`
+    evaluate(solver::AbstractCFRSolver)
 
 Evaluate full tree traversed by CFR solver. \n
 Returns tuple corresponding to game values for players given the strategies provided by the solver.

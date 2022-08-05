@@ -50,7 +50,7 @@ Random.rand(I::AbstractInfoState) = weighted_sample(I.σ)
 
 
 """
-    `ESCFRSolver(game::Game; method::Symbol=:vanilla, alpha::Float64 = 1.0, beta::Float64 = 1.0, gamma::Float64 = 1.0, d::Int)`
+    ESCFRSolver(game::Game; method::Symbol=:vanilla, alpha::Float64 = 1.0, beta::Float64 = 1.0, gamma::Float64 = 1.0, d::Int)
 
 Instantiate external sampling CFR solver with some `game`.
 

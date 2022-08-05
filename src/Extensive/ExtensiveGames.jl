@@ -2,21 +2,21 @@ abstract type Game{H,K} end
 
 
 """
-    `infokeytype(g::Game)`
+    infokeytype(g::Game)
 
 Returns information key type for game `g`
 """
 infokeytype(::Game{H,K}) where {H,K} = K
 
 """
-    `histtype(g::Game)`
+    histtype(g::Game)
 
 Returns history type for game `g`
 """
 histtype(::Game{H,K}) where {H,K} = H
 
 """
-    `initialhist(game::Game)`
+    initialhist(game::Game)
 
 Return initial history with which to start the game
 """
@@ -24,7 +24,7 @@ function initialhist end
 
 
 """
-    `isterminal(game::Game, h)`
+    isterminal(game::Game, h)
 
 Returns boolean - whether or not current history is terminal \n
 i.e h ∈ Z
@@ -32,7 +32,7 @@ i.e h ∈ Z
 function isterminal end
 
 """
-    `utility(game::Game, i::Int, h)`
+    utility(game::Game, i::Int, h)
 
 Returns utility of some history h for some player i
 """
@@ -40,7 +40,7 @@ function utility end
 
 
 """
-    `player(game::Game{H,K}, h::H)`
+    player(game::Game{H,K}, h::H)
 
 Returns integer id corresponding to which player's turn it is at history h
 0 - Chance Player
@@ -54,7 +54,7 @@ function player end
 
 
 """
-    `chance_action(game::Game, h)`
+    chance_action(game::Game, h)
 
 Return randomly sampled action from chance player at a given history
 """
@@ -70,7 +70,7 @@ function chance_actions end
 
 
 """
-    `next_hist(game::Game, h, a)`
+    next_hist(game::Game, h, a)
 
 Given some history and action return the next history
 `h′ = next_hist(game, h, a)`
@@ -79,7 +79,7 @@ function next_hist end
 
 
 """
-    `infokey(game::Game, h)`
+    infokey(game::Game, h)
 
 Returns unique identifier corresponding to some information set \n
 `infokey(game, h1) == infokey(game, h2)` ⟺ h1 and h2 belong to the same info set \n
@@ -89,21 +89,21 @@ function infokey end
 
 
 """
-    `actions(game::Game, h)`
+    actions(game::Game, h)
 
 Returns all actions available at some history
 """
 function actions end
 
 """
-    `players(game)`
+    players(game)
 
 Returns number of players in game (excluding chance player)
 """
 function players end
 
 """
-    `observation(game, h, a, h′)`
+    observation(game, h, a, h′)
 
 For tree building - information given to acting player in history `h`
 
@@ -111,7 +111,7 @@ For tree building - information given to acting player in history `h`
 function observation end
 
 """
-    `vectorized_info(game::Game{H,K}, key::K) where {H,K}`
+    vectorized_info(game::Game{H,K}, key::K) where {H,K}
 
 For converting information state representation to vector.
 Default behavior returns unmodified information state.
@@ -119,7 +119,7 @@ Default behavior returns unmodified information state.
 function vectorized_info end
 
 """
-    `vectorized_hist(game::Game{H}, h::H) where H`
+    vectorized_hist(game::Game{H}, h::H) where H
 
 For converting history representation to vector.
 Default behavior returns unmodified history.

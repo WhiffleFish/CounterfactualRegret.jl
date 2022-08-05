@@ -10,10 +10,8 @@ function Base.push!(h::ExploitabilityHistory, x, y)
 end
 
 """
+    ExploitabilityCallback(sol::AbstractCFRSolver, n::Int=1; p::Int=1)
 
-```
-ExploitabilityCallback(sol::AbstractCFRSolver, n::Int=1; p::Int=1)
-```
 - `sol` : 
 - `n`   : Frequency with which to query exploitability e.g. `n=10` indicates checking exploitability every 10 CFR iterations
 - `p`   : Player whose exploitability is being measured

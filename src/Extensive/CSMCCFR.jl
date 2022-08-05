@@ -14,7 +14,7 @@ end
 
 
 """
-    `CSCFRSolver(game::Game; debug::Bool=false, method::Symbol=:vanilla, alpha::Float64 = 1.0, beta::Float64 = 1.0, gamma::Float64 = 1.0, d::Int)`
+    CSCFRSolver(game::Game; debug::Bool=false, method::Symbol=:vanilla, alpha::Float64 = 1.0, beta::Float64 = 1.0, gamma::Float64 = 1.0, d::Int)
 
 Instantiate chance sampling CFR solver with some `game`.
 
