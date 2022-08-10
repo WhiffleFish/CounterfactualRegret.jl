@@ -16,6 +16,12 @@
 
 Each solver takes optional kwarg `method`, which can be either `:vanilla`, `:plus`, or `:discount`, which correspond to Vanilla CFR, CFR+, and DCFR respectively.
 
+## External Solver Packages
+| Name | Status |
+| ---- | ------ |
+| [DeepCFR](github.com/WhiffleFish/DeepCFR.jl) | [![CI](https://github.com/WhiffleFish/DeepCFR.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/WhiffleFish/DeepCFR.jl/actions/workflows/CI.yml)<br>[![codecov](https://codecov.io/gh/WhiffleFish/DeepCFR.jl/branch/main/graph/badge.svg?token=NM2KU62FG2)](https://codecov.io/gh/WhiffleFish/DeepCFR.jl) | 
+| [ESCHER](github.com/WhiffleFish/ESCHER.jl)  | [![CI](https://github.com/WhiffleFish/ESCHER.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/WhiffleFish/ESCHER.jl/actions/workflows/CI.yml)<br>[![codecov](https://codecov.io/gh/WhiffleFish/ESCHER.jl/branch/main/graph/badge.svg?token=rpqTMWcyXc)](https://codecov.io/gh/WhiffleFish/ESCHER.jl)     |
+
 ## Solving a Matrix Game
 
 ```julia
