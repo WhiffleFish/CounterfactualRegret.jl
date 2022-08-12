@@ -64,8 +64,10 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, q_h=1.0)
         return CFR(sol, h′, p, t, π_i, π_ni*inv(length(A)), q_h)
 
     elseif current_player == p
-        I = infoset(sol, h)
-        A = actions(game, h)
+        k = infokey(game, h)
+        I = infoset(sol, k)
+        A = actions(game, k)
+
         σ = regret_match!(I) # (b)
 
         a_idx = rand() > ϵ ? weighted_sample(σ) : rand(eachindex(A))
@@ -104,8 +106,10 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, q_h=1.0)
 
         return ûbσh
     else
-        I = infoset(sol, h)
-        A = actions(game, h)
+        k = infokey(game, h)
+        I = infoset(sol, k)
+        A = actions(game, k)
+        
         σ = I.σ
 
         K = infokey(game, h)

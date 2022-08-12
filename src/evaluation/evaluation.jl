@@ -28,7 +28,7 @@ function evaluate(solver::AbstractCFRSolver, h, i)
     end
 
     I = infokey(game, h)
-    A = actions(game, h)
+    A = actions(game, I)
 
     v_σ = 0.0
 

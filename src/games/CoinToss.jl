@@ -20,8 +20,8 @@ function Base.length(h::TossHist)
     end
 end
 
-function CFR.actions(game::CoinToss, h::TossHist)
-    return isone(player(game, h)) ? (1:2) : (1:3)
+function CFR.actions(game::CoinToss, k)
+    return isone(player(game, k)) ? (1:2) : (1:3)
 end
 
 function CFR.next_hist(game::CoinToss, h::TossHist, a::Int)
@@ -70,7 +70,8 @@ CFR.initialhist(::CoinToss) = TossHist(@SVector(zeros(Int,2)), :null)
 
 CFR.next_hist(::CoinToss, h::TossHist, a::Symbol) = TossHist(h.h, a)
 
-CFR.player(::CoinToss, h) = length(h)
+CFR.player(::CoinToss, h::TossHist) = length(h)
+CFR.player(::CoinToss, k::TossInfoState) = k.p
 
 function CFR.vectorized_hist(::CoinToss, h::TossHist)
     flip = if h.flip === :heads

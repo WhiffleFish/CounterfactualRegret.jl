@@ -51,8 +51,8 @@ end
 
 CFR.infokey(::MatrixGame, h) = length(h)
 
-function CFR.actions(game::MatrixGame, h::MatHist)
-    return 1:size(game.R, player(game,h))
+function CFR.actions(game::MatrixGame, k)
+    return 1:size(game.R, player(game,k))
 end
 
 

@@ -11,6 +11,7 @@ export chance_action, chance_actions, other_player
 export infokeytype, histtype
 export vectorized_hist, vectorized_info
 
+
 include(joinpath("solvers", "baselines.jl"))
 export ZeroBaseline, ExpectedValueBaseline
 
@@ -24,7 +25,6 @@ export train!, strategy
 
 include(joinpath("evaluation", "evaluation.jl"))
 export evaluate
-
 
 include(joinpath("evaluation", "exploitability.jl"))
 export ExploitabilitySolver, exploitability

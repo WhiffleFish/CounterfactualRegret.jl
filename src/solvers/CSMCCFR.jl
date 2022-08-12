@@ -62,8 +62,10 @@ function CFR(solver::CSCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
         h′ = next_hist(game,h,a)
         return CFR(solver, h′, i, t, π_i, π_ni*inv(length(A)))
     end
-    I = infoset(solver, h)
-    A = actions(game, h)
+    
+    k = infokey(game, h)
+    I = infoset(solver, k)
+    A = actions(game, k)
 
     v_σ = 0.0
     v_σ_Ia = I._tmp_σ

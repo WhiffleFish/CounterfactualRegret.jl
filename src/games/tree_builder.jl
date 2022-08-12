@@ -16,7 +16,6 @@ struct TreeHist{H}
     id          :: UInt64
     h           :: H
     obs_hist    :: NTuple{2, Vector{UInt64}} # (maybe don't need to store ALL observations)
-    actions     :: UnitRange{UInt}
     player      :: Int
     terminal    :: Bool
     utility     :: NTuple{2,Float64} # assume 2 player game
@@ -28,13 +27,14 @@ struct GameTree{G<:Game, H} <: Game{TreeHist{H}, UInt}
     nodes::Vector{TreeHist{H}}
     infokey2idx::Dict{Vector{UInt}, UInt}
     idx2infokey::Vector{Vector{UInt}}
+    actions::Dict{UInt, UnitRange{UInt}}
     game::G
 end
 
 Base.length(tree::GameTree) = length(tree.nodes)
 
 function _init_tree(game::Game{H}) where H
-    GameTree(TreeHist{H}[], Dict{Vector{UInt}, UInt}(), Vector{UInt}[], game)
+    GameTree(TreeHist{H}[], Dict{Vector{UInt}, UInt}(), Vector{UInt}[], Dict{UInt, UnitRange{UInt}}(), game)
 end
 
 """
@@ -54,14 +54,16 @@ function add_hist!(tree::GameTree{G,H}, h::H, obs_hist::NTuple{2,Vector{UInt}}) 
 
     # infokey
     tree_h = if iszero(p) # chance player
-        TreeHist(id, h, obs_hist, act, p, terminal, (u1,u2), UInt[], UInt(0))
+        TreeHist(id, h, obs_hist, p, terminal, (u1,u2), UInt[], UInt(0))
     else
         player_info = obs_hist[p]
         I = terminal ? UInt(0) : get!(tree.infokey2idx, player_info) do
             push!(tree.idx2infokey, player_info)
-            UInt(length(tree.idx2infokey))
+            idx = UInt(length(tree.idx2infokey))
+            tree.actions[idx] = act
+            idx
         end
-        TreeHist(id, h, obs_hist, act, p, terminal, (u1,u2), UInt[], I)
+        TreeHist(id, h, obs_hist, p, terminal, (u1,u2), UInt[], I)
     end
 
     push!(tree.nodes, tree_h)
@@ -82,7 +84,7 @@ function _build_tree(tree::GameTree, parent::TreeHist)
     isterminal(tree, parent) && return
     p = player(tree, parent)
 
-    A = iszero(p) ? chance_actions(game, parent.h) : actions(game, parent.h)
+    A = iszero(p) ? chance_actions(game, parent.h) : CFR.history_actions(game, parent.h)
 
     for (i,a) in enumerate(A)
         obs_hist = (copy(parent.obs_hist[1]), copy(parent.obs_hist[2]))
@@ -107,9 +109,9 @@ CFR.initialhist(g::GameTree) = first(g.nodes)
 
 CFR.player(::GameTree, h::TreeHist) = h.player
 
-CFR.chance_actions(::GameTree, h::TreeHist) = h.actions
+CFR.chance_actions(g::GameTree, h::TreeHist) = UInt(1):UInt(length(chance_actions(g.game, h.h)))
 
-CFR.actions(::GameTree, h::TreeHist) = h.actions
+CFR.actions(g::GameTree, k::UInt) = g.actions[k]
 
 CFR.isterminal(::GameTree, h::TreeHist) = h.terminal
 

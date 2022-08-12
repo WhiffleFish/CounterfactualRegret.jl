@@ -101,8 +101,9 @@ function CFR(solver::ESCFRSolver, h, i, t)
         return CFR(solver, h′, i, t)
     end
 
-    I = infoset(solver, h)
-    A = actions(game, h)
+    k = infokey(game, h)
+    I = infoset(solver, k)
+    A = actions(game, k)
 
     v_σ = 0.0
 

@@ -89,9 +89,9 @@ function infokey end
 
 
 """
-    actions(game::Game, h)
+    actions(game::Game, k)
 
-Returns all actions available at some history
+Returns all actions available at some information state given by key `k` (See [`infokey`](@ref))
 """
 function actions end
 
@@ -130,6 +130,13 @@ vectorized_info(game::Game, I) = I
 vectorized_hist(game::Game, h) = h
 
 players(game::Game) = 2
+
+
+#=
+Ideally would dispatch on `actions(game::Game{H}, history::H) where H`, but it's not guaranteed
+that history type is different from infokey type
+=#
+history_actions(game::Game, h) = actions(game, infokey(game, h))
 
 chance_action(game::Game, h) = rand(chance_actions(game, h))
 

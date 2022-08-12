@@ -105,13 +105,10 @@ end
 const REG_CFRSOLVER{K,G} = AbstractCFRSolver{K,G,InfoState}
 const DEBUG_CFRSOLVER{K,G} = AbstractCFRSolver{K,G,DebugInfoState}
 
-function infoset(solver::AbstractCFRSolver{K,G,INFO}, h) where {K,G,INFO}
-    game = solver.game
-    k = infokey(game, h)
-    I = get!(solver.I, k) do
-        INFO(length(actions(game,h)))
+function infoset(solver::AbstractCFRSolver{K,G,INFO}, k::K) where {K,G,INFO}
+    return get!(solver.I, k) do
+        INFO(length(actions(solver.game, k)))
     end
-    return I
 end
 
 function regret_match!(σ::AbstractVector, r::AbstractVector)
@@ -151,8 +148,9 @@ function CFR(sol::CFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
         return s * iLa
     end
 
-    I = infoset(sol, h)
-    A = actions(game, h)
+    k = infokey(game, h)
+    I = infoset(sol, k)
+    A = actions(game, k)
 
     v_σ = 0.0
     v_σ_Ia = I._tmp_σ
@@ -260,7 +258,7 @@ end
 function strategy(sol::AbstractCFRSolver{K}, I::K) where K
     infostate = get(sol.I, I, nothing)
     if isnothing(infostate)
-        L = length(first(values(sol.I)).σ)
+        L = length(actions(sol.game, I))
         return fill(inv(L), L)
     else
         σ_I = infostate.s

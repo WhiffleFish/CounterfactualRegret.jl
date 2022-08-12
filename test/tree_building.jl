@@ -22,8 +22,9 @@ end
 
     @test length(game_sol.I) == length(tree_sol.I)
 
-    game_strats = [strategy(game_sol, infokey(game, n.h)) for n in tree.nodes]
-    tree_strats = [strategy(tree_sol, n.infokey) for n in tree.nodes]
+    # Just iterate through `keys(tree.idx2infokey)` ?
+    game_strats = [strategy(game_sol, infokey(game, n.h)) for n in tree.nodes if !(iszero(n.player) || isterminal(tree, n))]
+    tree_strats = [strategy(tree_sol, n.infokey) for n in tree.nodes if !(iszero(n.player) || isterminal(tree, n))]
 
     diffs = zeros(length(game_strats))
     for i in eachindex(game_strats)
@@ -46,8 +47,8 @@ end
 
     @test length(game_sol.I) == length(tree_sol.I)
 
-    game_strats = [strategy(game_sol, infokey(game, n.h)) for n in tree.nodes]
-    tree_strats = [strategy(tree_sol, n.infokey) for n in tree.nodes]
+    game_strats = [strategy(game_sol, infokey(game, n.h)) for n in tree.nodes if !(iszero(n.player) || isterminal(tree, n))]
+    tree_strats = [strategy(tree_sol, n.infokey) for n in tree.nodes if !(iszero(n.player) || isterminal(tree, n))]
 
     diffs = zeros(length(game_strats))
     for i in eachindex(game_strats)
@@ -71,8 +72,8 @@ end
 
     @test length(game_sol.I) == length(tree_sol.I)
 
-    game_strats = [strategy(game_sol, infokey(game, n.h)) for n in tree.nodes]
-    tree_strats = [strategy(tree_sol, n.infokey) for n in tree.nodes]
+    game_strats = [strategy(game_sol, infokey(game, n.h)) for n in tree.nodes if !(iszero(n.player) || isterminal(tree, n))]
+    tree_strats = [strategy(tree_sol, n.infokey) for n in tree.nodes if !(iszero(n.player) || isterminal(tree, n))]
 
     diffs = zeros(length(game_strats))
     for i in eachindex(game_strats)

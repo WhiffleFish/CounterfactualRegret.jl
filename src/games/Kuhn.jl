@@ -106,9 +106,9 @@ function CFR.player(::Kuhn, h::KuhnHist)
 end
 
 #=
-Non-chance player actions available at some history h
+Non-chance player actions available at some info key `k`
 =#
-CFR.actions(::Kuhn, h::KuhnHist) = PASS:BET
+CFR.actions(::Kuhn, k) = PASS:BET
 
 #=
 Chance player actions available at some history h.
