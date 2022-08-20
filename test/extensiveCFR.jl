@@ -130,35 +130,31 @@ end
 
 @testset verbose=true "IIE Solvers" begin
     @testset "CFR" begin
-        @test_throws ErrorException CFRSolver(Kuhn(); method=:ayyylmao)
         CFRMatrixTest(CFRSolver, 100_000)
         CFRKuhnTest(CFRSolver, 100_000, 0.03)
-        CFRKuhnTest(CFRSolver, 100_000, 0.03; method=:discount)
-        CFRKuhnTest(CFRSolver, 100_000, 0.03; method=:plus)
+        CFRKuhnTest(CFRSolver, 100_000, 0.03; method=Discount())
+        CFRKuhnTest(CFRSolver, 100_000, 0.03; method=Plus())
     end
 
     @testset "CSCFR" begin
-        @test_throws ErrorException CSCFRSolver(Kuhn(); method=:ayyylmao)
         CFRMatrixTest(CSCFRSolver, 100_000)
         CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03)
-        CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03; method=:discount)
-        CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03; method=:plus)
+        CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03; method=Discount())
+        CFRKuhnTest(CSCFRSolver, 1_000_000, 0.03; method=Plus())
     end
 
     @testset "ESCFR" begin
-        @test_throws ErrorException ESCFRSolver(Kuhn(); method=:ayyylmao)
         CFRMatrixTest(ESCFRSolver, 500_000; debug=false)
         CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03)
-        CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=:discount)
-        CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=:plus)
+        CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=Discount())
+        CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=Plus())
     end
 
     @testset "OSCFR" begin
-        @test_throws ErrorException OSCFRSolver(Kuhn(); method=:ayyylmao)
         CFRMatrixTest(OSCFRSolver, 1_000_000; atol=0.05, debug=false)
         KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2)
         KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; baseline=ExpectedValueBaseline(Kuhn()))
-        KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; method=:discount)
-        KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1.5e-2; method=:plus)
+        KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; method=Discount())
+        KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1.5e-2; method=Plus())
     end
 end

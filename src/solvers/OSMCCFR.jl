@@ -1,14 +1,10 @@
 # https://arxiv.org/abs/1809.03057
-struct OSCFRSolver{method,B,K,G,I} <: AbstractCFRSolver{K,G,I}
-    m::Val{method}
+struct OSCFRSolver{M,B,K,G,I} <: AbstractCFRSolver{K,G,I}
+    method::M
     baseline::B
     I::Dict{K, I}
     game::G
-    α::Float64
-    β::Float64
-    γ::Float64
     ϵ::Float64
-    d::Int
 end
 
 """
@@ -35,19 +31,11 @@ Available baselines:
 """
 function OSCFRSolver(
     game::Game{H,K};
-    method::Symbol  = :vanilla,
-    baseline        = ZeroBaseline(),
-    alpha::Float64  = 1.0,
-    beta::Float64   = 1.0,
-    gamma::Float64  = 1.0,
-    ϵ::Float64      = 0.6,
-    d::Int          = 0) where {H,K}
+    method      = Vanilla(),
+    baseline    = ZeroBaseline(),
+    ϵ::Float64  = 0.6) where {H,K}
 
-    if method ∈ (:vanilla, :discount, :plus)
-        return OSCFRSolver(Val(method), baseline, Dict{K, InfoState}(), game, alpha, beta, gamma, ϵ, d)
-    else
-        error("method $method ∉ (:vanilla, :discount, :plus)")
-    end
+    return OSCFRSolver(method, baseline, Dict{K, InfoState}(), game, ϵ)
 end
 
 function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, q_h=1.0)
@@ -139,8 +127,8 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, q_h=1.0)
     end
 end
 
-function regret_update!(sol::OSCFRSolver{:discount}, r, ûbσIa, ûbσI, t)
-    (;α, β) = sol
+function regret_update!(sol::OSCFRSolver{Discount}, r, ûbσIa, ûbσI, t)
+    (;α, β) = sol.method
     for k in eachindex(r)
         r_k = ûbσIa[k] - ûbσI
         r[k] += if r_k > 0.0
@@ -151,23 +139,24 @@ function regret_update!(sol::OSCFRSolver{:discount}, r, ûbσIa, ûbσI, t)
     end
 end
 
-function regret_update!(sol::OSCFRSolver{:plus}, r, ûbσIa, ûbσI, t)
+function regret_update!(sol::OSCFRSolver{Plus}, r, ûbσIa, ûbσI, t)
     @. r = max(ûbσIa - ûbσI + r, 0.0)
 end
 
-function regret_update!(sol::OSCFRSolver{:vanilla}, r, ûbσIa, ûbσI, t)
+function regret_update!(sol::OSCFRSolver{Vanilla}, r, ûbσIa, ûbσI, t)
     @. r += ûbσIa - ûbσI
 end
 
-function strat_update!(sol::OSCFRSolver{:discount}, I, σ, π_ni, q_h, t)
-    @. I.s += (t^sol.γ)*(π_ni / q_h) * σ
+function strat_update!(sol::OSCFRSolver{Discount}, I, σ, π_ni, q_h, t)
+    @. I.s += (t^sol.method.γ)*(π_ni / q_h) * σ
 end
 
-function strat_update!(sol::OSCFRSolver{:plus}, I, σ, π_ni, q_h, t)
-    @. I.s += (π_ni / q_h) * t * σ
+function strat_update!(sol::OSCFRSolver{Plus}, I, σ, π_ni, q_h, t)
+    w = max(t - sol.method.d, 1)
+    @. I.s += (π_ni / q_h) * w * σ
 end
 
-function strat_update!(sol::OSCFRSolver{:vanilla}, I, σ, π_ni, q_h, t)
+function strat_update!(sol::OSCFRSolver{Vanilla}, I, σ, π_ni, q_h, t)
     @. I.s += (π_ni / q_h) * σ
 end
 
@@ -176,7 +165,7 @@ function train!(solver::OSCFRSolver, N::Int; show_progress::Bool=false, cb=()->(
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:players(solver.game)
-            CFR(solver, ih, i, max(t-solver.d,0))
+            CFR(solver, ih, i, t)
         end
         cb()
         next!(prog)

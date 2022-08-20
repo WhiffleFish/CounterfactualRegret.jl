@@ -2,14 +2,10 @@
 Chance Sampling Counterfactual Regret Minimization
 =#
 
-struct CSCFRSolver{method,K,G,I} <: AbstractCFRSolver{K,G,I}
-    m::Val{method}
+struct CSCFRSolver{M,K,G,I} <: AbstractCFRSolver{K,G,I}
+    method::M
     I::Dict{K, I}
     game::G
-    α::Float64
-    β::Float64
-    γ::Float64
-    d::Int
 end
 
 
@@ -32,21 +28,13 @@ Available methods:
 """
 function CSCFRSolver(
     game::Game{H,K};
-    method::Symbol  = :vanilla,
-    alpha::Float64  = 1.0,
-    beta::Float64   = 1.0,
-    gamma::Float64  = 1.0,
-    d::Int          = 0,
-    debug::Bool     = false) where {H,K}
+    method      = Vanilla(),
+    debug::Bool = false) where {H,K}
 
-    if method ∈ (:vanilla, :discount, :plus)
-        if debug
-            return CSCFRSolver(Val(method), Dict{K, DebugInfoState}(), game, alpha, beta, gamma, d)
-        else
-            return CSCFRSolver(Val(method), Dict{K, InfoState}(), game, alpha, beta, gamma, d)
-        end
+    if debug
+        return CSCFRSolver(method, Dict{K, DebugInfoState}(), game)
     else
-        error("method $method ∉ (:vanilla, :discount, :plus)")
+        return CSCFRSolver(method, Dict{K, InfoState}(), game)
     end
 end
 
@@ -88,8 +76,8 @@ function CFR(solver::CSCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
     return v_σ
 end
 
-function update!(sol::CSCFRSolver{:discount}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
-    (;α, β, γ) = sol
+function update!(sol::CSCFRSolver{Discount}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
+    (;α, β, γ) = sol.method
     s_coeff = (t/(t+1))^γ
     for k in eachindex(v_σ_Ia)
         r = π_ni*(v_σ_Ia[k] - v_σ)
@@ -110,13 +98,14 @@ function update!(sol::CSCFRSolver{:discount}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
     return nothing
 end
 
-function update!(sol::CSCFRSolver{:plus}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
+function update!(sol::CSCFRSolver{Plus}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
+    w = max(t-sol.method.d, 1)
     @. I.r = max(π_ni*(v_σ_Ia - v_σ) + I.r, 0.0)
-    @. I.s += t*π_i*I.σ
+    @. I.s += w*π_i*I.σ
     return nothing
 end
 
-function update!(sol::CSCFRSolver{:vanilla}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
+function update!(sol::CSCFRSolver{Vanilla}, I, v_σ_Ia, v_σ, t, π_i, π_ni)
     @. I.r += π_ni*(v_σ_Ia - v_σ)
     @. I.s += π_i*I.σ
     return nothing

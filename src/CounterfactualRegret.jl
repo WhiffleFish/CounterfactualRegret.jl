@@ -15,6 +15,9 @@ export vectorized_hist, vectorized_info
 include(joinpath("solvers", "baselines.jl"))
 export ZeroBaseline, ExpectedValueBaseline
 
+include(joinpath("solvers", "methods.jl"))
+export Vanilla, Discount, Plus
+
 include(joinpath("solvers", "CFR.jl"))
 include(joinpath("solvers", "CSMCCFR.jl"))
 include(joinpath("solvers", "ESMCCFR.jl"))

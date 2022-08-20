@@ -55,14 +55,10 @@ function DebugInfoState(L::Integer)
     )
 end
 
-struct CFRSolver{method,K,G,I} <: AbstractCFRSolver{K,G,I}
-    m::Val{method}
+struct CFRSolver{M,K,G,I} <: AbstractCFRSolver{K,G,I}
+    method::M
     I::Dict{K, I}
     game::G
-    α::Float64
-    β::Float64
-    γ::Float64
-    d::Int
 end
 
 """
@@ -84,21 +80,13 @@ Available methods:
 """
 function CFRSolver(
     game::Game{H,K};
-    method::Symbol  = :vanilla,
-    alpha::Float64  = 1.0,
-    beta::Float64   = 1.0,
-    gamma::Float64  = 1.0,
-    d::Int          = 0,
-    debug::Bool     = false) where {H,K}
+    method      = Vanilla(),
+    debug::Bool = false) where {H,K}
 
-    if method ∈ (:vanilla, :discount, :plus)
-        if debug
-            return CFRSolver(Val(method), Dict{K, DebugInfoState}(), game, alpha, beta, gamma, d)
-        else
-            return CFRSolver(Val(method), Dict{K, InfoState}(), game, alpha, beta, gamma, d)
-        end
+    if debug
+        return CFRSolver(method, Dict{K, DebugInfoState}(), game)
     else
-        error("method $method ∉ (:vanilla, :discount, :plus)")
+        return CFRSolver(method, Dict{K, InfoState}(), game)
     end
 end
 
@@ -174,8 +162,8 @@ function CFR(sol::CFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
     return v_σ
 end
 
-function regret_update!(sol::CFRSolver{:discount}, I, v_σ_Ia, v_σ, t, π_ni)
-    (;α, β) = sol
+function regret_update!(sol::CFRSolver{Discount}, I, v_σ_Ia, v_σ, t, π_ni)
+    (;α, β) = sol.method
 
     for k in eachindex(v_σ_Ia)
         r = π_ni*(v_σ_Ia[k] - v_σ)
@@ -193,24 +181,25 @@ function regret_update!(sol::CFRSolver{:discount}, I, v_σ_Ia, v_σ, t, π_ni)
     return I.r
 end
 
-function strat_update!(sol::CFRSolver{:discount}, I, π_i, t)
+function strat_update!(sol::CFRSolver{Discount}, I, π_i, t)
     I.s .+= π_i*I.σ
-    return I.s .*= (t/(t+1))^sol.γ
+    return I.s .*= (t/(t+1))^sol.method.γ
 end
 
-function regret_update!(sol::CFRSolver{:plus}, I, v_σ_Ia, v_σ, t, π_ni)
+function regret_update!(sol::CFRSolver{Plus}, I, v_σ_Ia, v_σ, t, π_ni)
     return @. I.r = max(π_ni*(v_σ_Ia - v_σ) + I.r, 0.0)
 end
 
-function strat_update!(sol::CFRSolver{:plus}, I, π_i, t)
-    return @. I.s += t*π_i*I.σ
+function strat_update!(sol::CFRSolver{Plus}, I, π_i, t)
+    w = max(t-sol.method.d, 1)
+    return @. I.s += w*π_i*I.σ
 end
 
-function regret_update!(sol::CFRSolver{:vanilla}, I, v_σ_Ia, v_σ, t, π_ni)
+function regret_update!(sol::CFRSolver{Vanilla}, I, v_σ_Ia, v_σ, t, π_ni)
     return @. I.r += π_ni*(v_σ_Ia - v_σ)
 end
 
-function strat_update!(sol::CFRSolver{:vanilla}, I, π_i, t)
+function strat_update!(sol::CFRSolver{Vanilla}, I, π_i, t)
     return @. I.s += π_i*I.σ
 end
 
@@ -220,7 +209,7 @@ function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=()-
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:players(solver.game)
-            CFR(solver, ih, i, max(t-solver.d,0))
+            CFR(solver, ih, i, t)
         end
         regret_match!(solver)
         cb()
@@ -235,7 +224,7 @@ function train!(solver::DEBUG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=(
     prog = Progress(N; enabled=show_progress)
     for t in 1:N
         for i in 1:players(solver.game)
-            CFR(solver, ih, i, max(t-solver.d,0))
+            CFR(solver, ih, i, t)
         end
         for I in values(solver.I)
             regret_match!(I)
