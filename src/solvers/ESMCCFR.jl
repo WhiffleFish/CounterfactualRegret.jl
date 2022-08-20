@@ -53,15 +53,6 @@ Instantiate external sampling CFR solver with some `game`.
 Samples a single actions from all players for single tree traversal.
 Time to complete a traversal is O(|𝒜ᵢ|ᵈ), where d is the depth of the game and |𝒜ᵢ| is the size of the action space
 for the acting player.
-
-
-Available methods:
-- `:vanilla` default (Zinkevich 2009)
-- `:discount` uses `alpha`, `beta`, `gamma` kwargs for discounted ESCFR (Brown 2019)
-    - `alpha`   - discount on positive regret
-    - `beta`    - discount on negative regret
-    - `gamma`   - discount on strategy 
-- `:plus` employs ESCFR+ with linear weighting and initial weighting threshold `d` (Tammelin 2014)
 """
 function ESCFRSolver(
     game::Game{H,K};

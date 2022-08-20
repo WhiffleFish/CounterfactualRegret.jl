@@ -10,21 +10,13 @@ end
 
 
 """
-    CSCFRSolver(game::Game; debug::Bool=false, method::Symbol=:vanilla, alpha::Float64 = 1.0, beta::Float64 = 1.0, gamma::Float64 = 1.0, d::Int)
+    CSCFRSolver(game; debug=false, method=Vanilla())
 
 Instantiate chance sampling CFR solver with some `game`.
 
 If `debug=true`, record history of strategies over training period, allowing
 for training history of individual information states to be plotted with
 `Plots.plot(is::DebugInfoState)`
-
-Available methods:
-- `:vanilla` default (Zinkevich 2009)
-- `:discount` uses `alpha`, `beta`, `gamma` kwargs for discounted CSCFR (Brown 2019)
-    - `alpha`   - discount on positive regret
-    - `beta`    - discount on negative regret
-    - `gamma`   - discount on strategy 
-- `:plus` employs CSCFR+ with linear weighting and initial weighting threshold `d` (Tammelin 2014)
 """
 function CSCFRSolver(
     game::Game{H,K};

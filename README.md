@@ -51,7 +51,7 @@ plot(cb, lw=2)
 
 ```julia
 game = Kuhn()
-sol = ESCFRSolver(game; method=:discount, alpha=1.0, beta=1.0, gamma=1.0)
+sol = ESCFRSolver(game; method=Discount(α=1.0, β=1.0, γ=1.0))
 cb = CFR.ExploitabilityCallback(sol)
 train!(sol, 100_001; cb=cb)
 

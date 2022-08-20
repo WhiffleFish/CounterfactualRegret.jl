@@ -8,25 +8,17 @@ struct OSCFRSolver{M,B,K,G,I} <: AbstractCFRSolver{K,G,I}
 end
 
 """
-    OSCFRSolver(game::Game; method::Symbol=:vanilla, baseline = ZeroBaseline(), alpha::Float64 = 1.0, beta::Float64 = 1.0, gamma::Float64 = 1.0, d::Int, ϵ::Float64 = 0.6,)
+    OSCFRSolver(game; method=Vanilla(), baseline=ZeroBaseline(), ϵ::Float64 = 0.6)
 
 Instantiate outcome sampling CFR solver with some `game`.
 
 Samples a single actions from all players for single tree traversal.
 Time to complete a traversal is O(d), where d is the depth of the game. 
 
-Available methods:
-- `:vanilla` default (Zinkevich 2009)
-- `:discount` uses `alpha`, `beta`, `gamma` kwargs for discounted OSCFR (Brown 2019)
-    - `alpha`   - discount on positive regret
-    - `beta`    - discount on negative regret
-    - `gamma`   - discount on strategy 
-- `:plus` employs OSCFR+ with linear weighting and initial weighting threshold `d` (Tammelin 2014)
-
 `ϵ` - exploration parameter
 
 Available baselines:
-- `ZeroBaseline` - Equivalent to no baseline
+- [`ZeroBaseline`](@ref) - Equivalent to no baseline
 - [`ExpectedValueBaseline`](@ref)
 """
 function OSCFRSolver(
