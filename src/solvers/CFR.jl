@@ -1,11 +1,11 @@
 abstract type IIESolver end # Imperfect Information Extensive Game Solver
 abstract type AbstractInfoState end
-abstract type AbstractCFRSolver{K,G<:Game,I<:AbstractInfoState} <: IIESolver end
+abstract type AbstractCFRSolver{K,G<:Game} <: IIESolver end
 
 infokeytype(::AbstractCFRSolver{K}) where K = K
 
 """
-    strategy(sol::AbstractCFRSolver, k)
+    strategy(solver, k)
 
 Return the current strategy of solver `sol` for information key `k`
 
@@ -14,7 +14,7 @@ If sufficiently trained ([`train!`](@ref)), this should be close to a Nash Equil
 function strategy end
 
 """
-    train!(sol::AbstractCFRSolver, n; cb=()->(), show_progress::Bool=false)
+    train!(sol::AbstractCFRSolver, n; cb=()->(), show_progress=false)
 
 Train a CFR solver for `n` iterations with optional callbacks `cb` and optional progress bar `show_progress`
 """
@@ -37,58 +37,29 @@ function InfoState(L::Integer)
     )
 end
 
-struct DebugInfoState <: AbstractInfoState
-    σ::Vector{Float64}
-    r::Vector{Float64}
-    s::Vector{Float64}
-    _tmp_σ::Vector{Float64}
-    hist::Vector{Vector{Float64}}
-end
-
-function DebugInfoState(L::Integer)
-    return DebugInfoState(
-        fill(1/L, L),
-        zeros(L),
-        fill(1/L, L),
-        fill(1/L, L),
-        Vector{Float64}[]
-    )
-end
-
-struct CFRSolver{M,K,G,I} <: AbstractCFRSolver{K,G,I}
+struct CFRSolver{M,K,G} <: AbstractCFRSolver{K,G}
     method::M
-    I::Dict{K, I}
+    I::Dict{K, InfoState}
     game::G
 end
 
 """
-    CFRSolver(game; debug=false, method=Vanilla())
+    CFRSolver(game; method=Vanilla())
 
 Instantiate vanilla CFR solver with some `game`.
-
-If `debug=true`, record history of strategies over training period, allowing
-for training history of individual information states to be plotted with
-`Plots.plot(is::DebugInfoState)`
 
 """
 function CFRSolver(
     game::Game{H,K};
-    method      = Vanilla(),
-    debug::Bool = false) where {H,K}
+    method = Vanilla()) where {H,K}
 
-    if debug
-        return CFRSolver(method, Dict{K, DebugInfoState}(), game)
-    else
-        return CFRSolver(method, Dict{K, InfoState}(), game)
-    end
+    return CFRSolver(method, Dict{K, InfoState}(), game)
 end
 
-const REG_CFRSOLVER{K,G} = AbstractCFRSolver{K,G,InfoState}
-const DEBUG_CFRSOLVER{K,G} = AbstractCFRSolver{K,G,DebugInfoState}
-
-function infoset(solver::AbstractCFRSolver{K,G,INFO}, k::K) where {K,G,INFO}
+function infoset(solver::AbstractCFRSolver{K,G}, k::K) where {K,G}
+    infotype = eltype(values(solver.I))
     return get!(solver.I, k) do
-        INFO(length(actions(solver.game, k)))
+        infotype(length(actions(solver.game, k)))
     end
 end
 
@@ -196,7 +167,7 @@ function strat_update!(sol::CFRSolver{Vanilla}, I, π_i, t)
     return @. I.s += π_i*I.σ
 end
 
-function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=()->())
+function train!(solver::AbstractCFRSolver, N::Int; show_progress::Bool=false, cb=()->())
     regret_match!(solver)
     ih = initialhist(solver.game)
     prog = Progress(N; enabled=show_progress)
@@ -208,33 +179,7 @@ function train!(solver::REG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=()-
         cb()
         next!(prog)
     end
-    finalize_strategies!(solver)
-end
-
-function train!(solver::DEBUG_CFRSOLVER, N::Int; show_progress::Bool=false, cb=()->())
-    regret_match!(solver)
-    ih = initialhist(solver.game)
-    prog = Progress(N; enabled=show_progress)
-    for t in 1:N
-        for i in 1:players(solver.game)
-            CFR(solver, ih, i, t)
-        end
-        for I in values(solver.I)
-            regret_match!(I)
-            push!(I.hist, copy(I.s) ./ sum(I.s))
-        end
-        cb()
-        next!(prog)
-    end
-    finalize_strategies!(solver)
-end
-
-function finalize_strategies!(solver::AbstractCFRSolver)
-    for I in values(solver.I)
-        I.σ .= I.s
-        s = sum(I.σ)
-        s > 0 ? I.σ ./= sum(I.σ) : fill!(I.σ, 1/length(I.σ))
-    end
+    solver
 end
 
 function strategy(sol::AbstractCFRSolver{K}, I::K) where K
@@ -249,24 +194,6 @@ function strategy(sol::AbstractCFRSolver{K}, I::K) where K
 end
 
 ## extras
-
-
-@recipe function f(I::AbstractInfoState)
-
-    xlabel := "Training Steps"
-
-    L = length(I.σ)
-    labels = Matrix{String}(undef, 1, L)
-    for i in eachindex(labels); labels[i] = "a$i"; end
-
-    @series begin
-        subplot := 1
-        ylabel := "Strategy"
-        labels := labels
-        reduce(hcat,I.hist)'
-    end
-
-end
 
 function Base.print(io::IO, sol::AbstractCFRSolver)
     for (k,I) in sol.I

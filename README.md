@@ -13,12 +13,12 @@
 | `ESCFRSolver` | External Sampling  |
 | `OSCFRSolver` | Outcome Sampling   |
 
-Each solver takes optional kwarg `method`, which can be either `:vanilla`, `:plus`, or `:discount`, which correspond to Vanilla CFR, CFR+, and DCFR respectively.
+Each solver takes optional kwarg `method`, which can an instantiation of either `Vanilla`, `Plus`, or `Discount` types, which correspond to Vanilla CFR, CFR+, and discounted CFR respectively.
 
 ## External Solver Packages
 | Name | Status |
 | ---- | ------ |
-| [DeepCFR](https://github.com/WhiffleFish/DeepCFR.jl) | [![CI](https://github.com/WhiffleFish/DeepCFR.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/WhiffleFish/DeepCFR.jl/actions/workflows/CI.yml)<br>[![codecov](https://codecov.io/gh/WhiffleFish/DeepCFR.jl/branch/main/graph/badge.svg?token=NM2KU62FG2)](https://codecov.io/gh/WhiffleFish/DeepCFR.jl) | 
+| [DeepCFR](https://github.com/WhiffleFish/DeepCFR.jl) | [![CI](https://github.com/WhiffleFish/DeepCFR.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/WhiffleFish/DeepCFR.jl/actions/workflows/CI.yml)<br>[![codecov](https://codecov.io/gh/WhiffleFish/DeepCFR.jl/branch/main/graph/badge.svg?token=NM2KU62FG2)](https://codecov.io/gh/WhiffleFish/DeepCFR.jl) |
 | [ESCHER](https://github.com/WhiffleFish/ESCHER.jl)  | [![CI](https://github.com/WhiffleFish/ESCHER.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/WhiffleFish/ESCHER.jl/actions/workflows/CI.yml)<br>[![codecov](https://codecov.io/gh/WhiffleFish/ESCHER.jl/branch/main/graph/badge.svg?token=rpqTMWcyXc)](https://codecov.io/gh/WhiffleFish/ESCHER.jl)     |
 
 ## Solving a Matrix Game
@@ -37,13 +37,10 @@ game = MatrixGame([
 sol = CFRSolver(game; debug=true)
 cb = CFR.ExploitabilityCallback(sol, 10) # optional callback to monitor training
 train!(sol, 10_000; cb=cb)
-plot(sol)
 plot(cb, lw=2)
 ```
 
-| Strategy                                      | Exploitability                                |
-| --------------------------------------------- | --------------------------------------------- |
-| <img src="./img/matrix_strategies.svg">       | <img src="./img/matrix_exploitability.svg">   |
+<img src="./img/matrix_exploitability.svg">
 
 ## Finding Kuhn Poker Nash Equilibrium with external sampling & discounting
 

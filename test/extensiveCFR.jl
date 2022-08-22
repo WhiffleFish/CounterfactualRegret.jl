@@ -1,4 +1,4 @@
-function CFRMatrixTest(sol_type, N::Int; atol=0.01, debug=true, kwargs::NamedTuple=(;))
+function CFRMatrixTest(sol_type, N::Int; atol=0.01, kwargs::NamedTuple=(;))
     ## Rock Paper Scissors
     game = MatrixGame([
         (0,0) (-1,1) (1,-1);
@@ -62,13 +62,8 @@ function CFRMatrixTest(sol_type, N::Int; atol=0.01, debug=true, kwargs::NamedTup
         all( .≈(F_eval,(1,1), atol=atol))
     end
 
-    if debug
-        sol = sol_type(game; debug=true, kwargs...)
-        train!(sol, 100_000)
-
-        @test CFR.infokeytype(sol) === Int
-        @test CFR.histtype(game) === Games.MatHist{2}
-    end
+    @test CFR.infokeytype(sol) === Int
+    @test CFR.histtype(game) === Games.MatHist{2}
 end
 
 function CFRKuhnTest(sol_type, N::Int, atol::Float64; kwargs...)
@@ -144,14 +139,14 @@ end
     end
 
     @testset "ESCFR" begin
-        CFRMatrixTest(ESCFRSolver, 500_000; debug=false)
+        CFRMatrixTest(ESCFRSolver, 500_000)
         CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03)
         CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=Discount())
         CFRKuhnTest(ESCFRSolver, 1_000_000, 0.03; method=Plus())
     end
 
     @testset "OSCFR" begin
-        CFRMatrixTest(OSCFRSolver, 1_000_000; atol=0.05, debug=false)
+        CFRMatrixTest(OSCFRSolver, 1_000_000; atol=0.05)
         KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2)
         KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; baseline=ExpectedValueBaseline(Kuhn()))
         KuhnExploitabilityTest(OSCFRSolver, 1_000_000, 1e-2; method=Discount())

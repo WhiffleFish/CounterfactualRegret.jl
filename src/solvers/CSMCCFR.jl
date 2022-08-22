@@ -1,10 +1,6 @@
-#=
-Chance Sampling Counterfactual Regret Minimization
-=#
-
-struct CSCFRSolver{M,K,G,I} <: AbstractCFRSolver{K,G,I}
+struct CSCFRSolver{M,K,G} <: AbstractCFRSolver{K,G}
     method::M
-    I::Dict{K, I}
+    I::Dict{K, InfoState}
     game::G
 end
 
@@ -14,20 +10,12 @@ end
 
 Instantiate chance sampling CFR solver with some `game`.
 
-If `debug=true`, record history of strategies over training period, allowing
-for training history of individual information states to be plotted with
-`Plots.plot(is::DebugInfoState)`
 """
 function CSCFRSolver(
     game::Game{H,K};
-    method      = Vanilla(),
-    debug::Bool = false) where {H,K}
+    method      = Vanilla()) where {H,K}
 
-    if debug
-        return CSCFRSolver(method, Dict{K, DebugInfoState}(), game)
-    else
-        return CSCFRSolver(method, Dict{K, InfoState}(), game)
-    end
+    return CSCFRSolver(method, Dict{K, InfoState}(), game)
 end
 
 function CFR(solver::CSCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)

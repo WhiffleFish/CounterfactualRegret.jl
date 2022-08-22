@@ -23,9 +23,9 @@ function MCInfoState(L::Integer)
     )
 end
 
-struct ESCFRSolver{M,K,G,I} <: AbstractCFRSolver{K,G,I}
+struct ESCFRSolver{M,K,G} <: AbstractCFRSolver{K,G}
     method::M
-    I::Dict{K, I}
+    I::Dict{K, MCInfoState}
     game::G
 end
 
@@ -142,5 +142,5 @@ function train!(solver::ESCFRSolver, N::Int; show_progress::Bool=false, cb=()->(
         cb()
         next!(prog)
     end
-    finalize_strategies!(solver)
+    solver
 end

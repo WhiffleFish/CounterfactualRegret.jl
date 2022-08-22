@@ -2,7 +2,7 @@
 Convert extensive form to matrix form
 =#
 
-infodict(sol::CFR.AbstractCFRSolver{K,G,I}) where {K,G,I} = getfield(sol,:I)::Dict{K,I}
+infodict(sol::CFR.AbstractCFRSolver) = getfield(sol,:I)
 
 function pure_strategies(sol::CFR.CFRSolver, p::Int)
     game = sol.game

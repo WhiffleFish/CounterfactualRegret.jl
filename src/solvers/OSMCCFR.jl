@@ -1,8 +1,8 @@
 # https://arxiv.org/abs/1809.03057
-struct OSCFRSolver{M,B,K,G,I} <: AbstractCFRSolver{K,G,I}
+struct OSCFRSolver{M,B,K,G} <: AbstractCFRSolver{K,G}
     method::M
     baseline::B
-    I::Dict{K, I}
+    I::Dict{K, InfoState}
     game::G
     ϵ::Float64
 end
@@ -13,7 +13,7 @@ end
 Instantiate outcome sampling CFR solver with some `game`.
 
 Samples a single actions from all players for single tree traversal.
-Time to complete a traversal is O(d), where d is the depth of the game. 
+Time to complete a traversal is O(d), where d is the depth of the game.
 
 `ϵ` - exploration parameter
 
@@ -89,7 +89,7 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, q_h=1.0)
         k = infokey(game, h)
         I = infoset(sol, k)
         A = actions(game, k)
-        
+
         σ = I.σ
 
         K = infokey(game, h)
@@ -162,5 +162,5 @@ function train!(solver::OSCFRSolver, N::Int; show_progress::Bool=false, cb=()->(
         cb()
         next!(prog)
     end
-    finalize_strategies!(solver)
+    solver
 end

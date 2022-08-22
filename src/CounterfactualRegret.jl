@@ -2,6 +2,7 @@ module CounterfactualRegret
 
 using ProgressMeter
 using RecipesBase
+using Random
 
 
 include("ExtensiveGames.jl")
@@ -33,6 +34,7 @@ include(joinpath("evaluation", "exploitability.jl"))
 export ExploitabilitySolver, exploitability
 
 include(joinpath("evaluation", "callback.jl"))
+export ExploitabilityCallback
 
 # Miscellaneous Games
 include(joinpath("games", "Games.jl"))
