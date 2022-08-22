@@ -3,6 +3,10 @@
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://whifflefish.github.io/CounterfactualRegret.jl/dev/)
 [![codecov](https://codecov.io/gh/WhiffleFish/CounterfactualRegret.jl/branch/main/graph/badge.svg?token=X32NBIUN9Z)](https://codecov.io/gh/WhiffleFish/CounterfactualRegret.jl)
 
+## Installation
+```julia
+using Pkg; Pkg.add("CounterfactualRegret")
+```
 
 ## Implemented Solvers
 
@@ -18,8 +22,9 @@ Each solver takes optional kwarg `method`, which can an instantiation of either 
 ## External Solver Packages
 | Name | Status |
 | ---- | ------ |
-| [DeepCFR](https://github.com/WhiffleFish/DeepCFR.jl) | [![CI](https://github.com/WhiffleFish/DeepCFR.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/WhiffleFish/DeepCFR.jl/actions/workflows/CI.yml)<br>[![codecov](https://codecov.io/gh/WhiffleFish/DeepCFR.jl/branch/main/graph/badge.svg?token=NM2KU62FG2)](https://codecov.io/gh/WhiffleFish/DeepCFR.jl) |
-| [ESCHER](https://github.com/WhiffleFish/ESCHER.jl)  | [![CI](https://github.com/WhiffleFish/ESCHER.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/WhiffleFish/ESCHER.jl/actions/workflows/CI.yml)<br>[![codecov](https://codecov.io/gh/WhiffleFish/ESCHER.jl/branch/main/graph/badge.svg?token=rpqTMWcyXc)](https://codecov.io/gh/WhiffleFish/ESCHER.jl)     |
+| [DeepCFR](https://github.com/WhiffleFish/DeepCFR.jl) | [![CI](https://github.com/WhiffleFish/DeepCFR.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/WhiffleFish/DeepCFR.jl/actions/workflows/CI.yml) [![codecov](https://codecov.io/gh/WhiffleFish/DeepCFR.jl/branch/main/graph/badge.svg?token=NM2KU62FG2)](https://codecov.io/gh/WhiffleFish/DeepCFR.jl) |
+| [ESCHER](https://github.com/WhiffleFish/ESCHER.jl)  | [![CI](https://github.com/WhiffleFish/ESCHER.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/WhiffleFish/ESCHER.jl/actions/workflows/CI.yml) [![codecov](https://codecov.io/gh/WhiffleFish/ESCHER.jl/branch/main/graph/badge.svg?token=rpqTMWcyXc)](https://codecov.io/gh/WhiffleFish/ESCHER.jl)     |
+| [POMDPBestResponse](https://github.com/WhiffleFish/BestResponsePOMDP.jl) | [![CI](https://github.com/WhiffleFish/BestResponsePOMDP.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/WhiffleFish/BestResponsePOMDP.jl/actions/workflows/CI.yml) [![codecov](https://codecov.io/gh/WhiffleFish/BestResponsePOMDP.jl/branch/main/graph/badge.svg?token=lKGu7ENcfF)](https://codecov.io/gh/WhiffleFish/BestResponsePOMDP.jl) |
 
 ## Solving a Matrix Game
 
