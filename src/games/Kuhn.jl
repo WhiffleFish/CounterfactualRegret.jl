@@ -135,7 +135,7 @@ end
 
 function CFR.vectorized_info(::Kuhn, I::Tuple)
     p, pc, hist = I
-    h = convert(SVector{3,Float32}, hist)
+    h = convert(SVector{3,Float32}, hist.v)
     SA[Float32(p), Float32(pc), h...]
 end
 
