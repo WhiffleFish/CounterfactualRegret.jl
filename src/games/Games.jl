@@ -5,6 +5,9 @@ const CFR = CounterfactualRegret
 using StaticArrays
 using RecipesBase
 
+include("util.jl")
+export StaticPushVector, SPV
+
 include("Extensive2Matrix.jl")
 include("Matrix.jl")
 export MatrixGame

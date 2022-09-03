@@ -1,33 +1,20 @@
+const KuhnActionHist = StaticPushVector{3,Int}
+const KuhnInfoKey = Tuple{Int, Int, KuhnActionHist} # [player, player_card, action_hist]
 const PASS = 0
 const BET = 1
-const KuhnInfoKey = Tuple{Int, Int, SVector{3,Int}} # [player, player_card, action_hist]
 
 """
 - `cards`       : vector containing card representation for each player
 - `action_hist` : vector containing history of actions
-    - `-1` : null action i.e. no action has been taken here
     - `0`  : check/fold
     - `1`  : bet
 """
 struct KuhnHist
     cards::SVector{2,Int}
-    action_hist::SVector{3,Int}
+    action_hist::KuhnActionHist
 end
 
-#=
-Convenience function for determining how far into the game we are.
-e.g. an action history of [-1,-1,-1] implies no player has taken an action yet (length 0)
-and an action history of [1,0,-1] implies that player 1 has betted (1) and player 2 has folded (0).
-=#
-function Base.length(h::KuhnHist)
-    l = 0
-    for a in h.action_hist
-        a === -1 && break
-        l += 1
-    end
-    return l
-end
-
+Base.length(h::KuhnHist) = length(h.action_hist)
 
 #=
 Stored parameters are all possible dealt card suit combinations
@@ -38,11 +25,11 @@ K - 3
 """
 Kuhn Poker
 
-"Kuhn poker is an extremely simplified form of poker developed by Harold W. Kuhn as a 
-simple model zero-sum two-player imperfect-information game, amenable to a complete 
-game-theoretic analysis. In Kuhn poker, the deck includes only three playing cards, 
-for example a King, Queen, and Jack. One card is dealt to each player, which may place 
-bets similarly to a standard poker. If both players bet or both players pass, the player 
+"Kuhn poker is an extremely simplified form of poker developed by Harold W. Kuhn as a
+simple model zero-sum two-player imperfect-information game, amenable to a complete
+game-theoretic analysis. In Kuhn poker, the deck includes only three playing cards,
+for example a King, Queen, and Jack. One card is dealt to each player, which may place
+bets similarly to a standard poker. If both players bet or both players pass, the player
 with the higher card wins, otherwise, the betting player wins."
 - https://en.wikipedia.org/wiki/Kuhn_poker
 """
@@ -56,7 +43,7 @@ Initial history that marks the start of the game.
 No cards have been chosen yet: `hist.cards = SA[0,0]`
 and no players have taken any actions yet: `hist.cards = SA[-1,-1,-1]`
 =#
-CFR.initialhist(::Kuhn) = KuhnHist(SA[0,0], SA[-1,-1,-1])
+CFR.initialhist(::Kuhn) = KuhnHist(SA[0,0], KuhnActionHist())
 
 #=
 Check if current history is terminal i.e h ∈ 𝒵
@@ -79,15 +66,15 @@ function CFR.utility(::Kuhn, i::Int, h::KuhnHist)
     cards = h.cards
     L = length(as)
     has_higher_card = cards[i] > cards[other_player(i)]
-    if as == SA[PASS, PASS, -1]
+    if as == SA[PASS, PASS]
         return has_higher_card ? 1. : -1.
     elseif as == SA[PASS, BET, PASS]
         return i==2 ? 1. : -1.
     elseif as == SA[PASS, BET, BET]
         return has_higher_card ? 2. : -2.
-    elseif as == SA[BET, PASS, -1]
+    elseif as == SA[BET, PASS]
         return i==1 ? 1. : -1.
-    elseif as == SA[BET, BET, -1]
+    elseif as == SA[BET, BET]
         return has_higher_card ? 2. : -2.
     else
         return 0.
@@ -98,45 +85,33 @@ end
 Player P(h) is the player who takes an action after history h
 =#
 function CFR.player(::Kuhn, h::KuhnHist)
-    if any(iszero, h.cards)
-        return 0
-    else
-        return length(h)%2 + 1
-    end
+    return any(iszero, h.cards) ? 0 : mod(length(h),2) + 1
 end
 
 #=
 Non-chance player actions available at some info key `k`
 =#
-CFR.actions(::Kuhn, k) = PASS:BET
+CFR.actions(::Kuhn, ::Any) = PASS:BET
 
 #=
 Chance player actions available at some history h.
 Chance player can choose from any of the available card permutations stored in `game.cards`.
 =#
-function CFR.chance_actions(game::Kuhn, h::KuhnHist)
-    return game.cards
-end
+CFR.chance_actions(game::Kuhn, h::KuhnHist) = game.cards
 
 #=
 Next history resulting from chance player action.
 `h` here is always the initial history, as the chance player always has the first turn in Kuhn Poker.
 The history here is modified by changing the dealt cards to the ones chosen by the chance player.
 =#
-function CFR.next_hist(::Kuhn, h, a::SVector{2,Int})
-    return KuhnHist(a, h.action_hist)
-end
+CFR.next_hist(::Kuhn, h, a::SVector{2,Int}) = KuhnHist(a, h.action_hist)
 
 #=
 Next history resulting from non-chance player action.
 For example, if the current action history is [0,-1,-1] (player 1 has checked)
 and player 2 bets (action 1), then the next action history becomes [0,1,-1]
 =#
-function CFR.next_hist(::Kuhn, h::KuhnHist, a::Int)
-    L = length(h)
-    action_hist = setindex(h.action_hist, a, L+1)
-    return KuhnHist(h.cards, action_hist)
-end
+CFR.next_hist(::Kuhn, h::KuhnHist, a::Int) = KuhnHist(h.cards, push(h.action_hist, a))
 
 #=
 Information state representation.
@@ -154,7 +129,7 @@ end
 function CFR.vectorized_hist(::Kuhn, h::KuhnHist)
     (;cards, action_hist) = h
     c = convert(SVector{2,Float32}, cards)
-    a = convert(SVector{3,Float32}, action_hist)
+    a = convert(SVector{3,Float32}, action_hist.v)
     SA[c..., a...]
 end
 
