@@ -143,11 +143,10 @@ function Base.print(io::IO, solver::CFR.AbstractCFRSolver{K,G}) where {K,G<:Kuhn
     println(io)
     for (k,v) in solver.I
         h = k[3]
-        Lp1 = findfirst(==(-1), h)
-        h_str = rpad(join(h[1:Lp1-1]),3,"_")
+        h_str = rpad(join(h),2,"_")
         σ = copy(v.s)
         σ ./= sum(σ)
         σ = round.(σ, digits=3)
-        println(io, "Player: $(k[1]) \t Card: $(k[2]) \t h: $(join(h_str)) \t σ: $σ")
+        println(io, "Player: $(k[1]) \t Card: $(k[2]) \t hist: $(h_str) \t σ: $σ")
     end
 end
