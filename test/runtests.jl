@@ -1,5 +1,6 @@
 using CounterfactualRegret
 using CounterfactualRegret.Games
+using CounterfactualRegret.Games: KuhnActionHist
 const CFR = CounterfactualRegret
 using StaticArrays
 using Random
@@ -8,6 +9,8 @@ using LinearAlgebra
 using Test
 
 Random.seed!(1337)
+
+include(joinpath(@__DIR__, "staticpushvectors.jl"))
 
 include(joinpath(@__DIR__, "extensiveCFR.jl"))
 
