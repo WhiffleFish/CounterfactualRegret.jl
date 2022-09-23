@@ -14,11 +14,13 @@ include(joinpath(@__DIR__, "staticpushvectors.jl"))
 
 include(joinpath(@__DIR__, "extensiveCFR.jl"))
 
+include(joinpath(@__DIR__, "exploitability.jl"))
+
+include(joinpath(@__DIR__, "is-mcts.jl"))
+
 include(joinpath(@__DIR__, "printing.jl"))
 
 include(joinpath(@__DIR__, "extensive2matrix.jl"))
-
-include(joinpath(@__DIR__, "exploitability.jl"))
 
 include(joinpath(@__DIR__, "callback.jl"))
 

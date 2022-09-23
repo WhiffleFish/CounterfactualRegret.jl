@@ -62,8 +62,8 @@ function best_action(crit::MaxQ, node::MCTSNode)
     (;q_a, n_a) = node
     best_idx = 0
     best_val = -Inf
-    @inbounds for i ∈ eachindex(q, n)
-        ucb = q[i]
+    @inbounds for i ∈ eachindex(q_a, n_a)
+        ucb = q_a[i]
         if ucb > best_val
             best_idx = i
             best_val = ucb
