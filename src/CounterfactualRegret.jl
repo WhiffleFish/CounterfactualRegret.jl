@@ -31,7 +31,8 @@ include(joinpath("evaluation", "evaluation.jl"))
 export evaluate
 
 include(joinpath("evaluation", "exploitability.jl"))
-export ExploitabilitySolver, exploitability
+include(joinpath("evaluation", "is-mcts.jl"))
+export ExploitabilitySolver, exploitability, ISMCTS
 
 include(joinpath("evaluation", "callback.jl"))
 export ExploitabilityCallback

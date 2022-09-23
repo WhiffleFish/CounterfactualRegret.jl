@@ -40,3 +40,29 @@ function evaluate(solver::AbstractCFRSolver, h, i)
 
     return v_σ
 end
+
+
+function approx_eval(sol, n, game::Game, p)
+    s = 0.0
+    h0 = initialhist(game)
+    for i ∈ 1:n
+        s += _approx_eval(sol, game, p, h0)
+    end
+    return s / n
+end
+
+function _approx_eval(sol, game::Game, p, h)
+    game = sol.game
+    if isterminal(game, h)
+        return utility(game, p, h)
+    elseif iszero(player(game, h))
+        a = rand(chance_actions(game, h))
+        return _approx_eval(sol, game, p, next_hist(game, h, a))
+    else
+        A = actions(game, h)
+        I = infokey(game, h)
+        σ = strategy(sol, I)
+        a = A[weighted_sample(σ)]
+        return _approx_eval(sol, game, p, next_hist(game, h, a))
+    end
+end

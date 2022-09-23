@@ -12,7 +12,7 @@ end
 """
     ExploitabilityCallback(sol::AbstractCFRSolver, n=1; p=1)
 
-- `sol` : 
+- `sol` :
 - `n`   : Frequency with which to query exploitability e.g. `n=10` indicates checking exploitability every 10 CFR iterations
 - `p`   : Player whose exploitability is being measured
 
@@ -111,3 +111,33 @@ function (chain::CallbackChain)()
 		cb()
 	end
 end
+
+
+mutable struct MCTSExploitabilityCallback{M<:ISMCTS}
+    mcts::M
+    n::Int
+    eval_iter::Int
+    state::Int
+    hist::ExploitabilityHistory
+    function MCTSExploitabilityCallback(mcts::ISMCTS, n=1; eval_iter=mcts.max_iter)
+        new{typeof(mcts)}(mcts, n, eval_iter, 0, ExploitabilityHistory())
+    end
+end
+
+ExploitabilityCallback(mcts::ISMCTS, n; eval_iter=mcts.max_iter) = MCTSExploitabilityCallback(mcts, n;eval_iter) 
+
+function exploitability(cb::MCTSExploitabilityCallback)
+    mcts = cb.mcts
+    v_exploit = run(mcts)
+    v_current = approx_eval(mcts.sol, cb.eval_iter, mcts.sol.game, mcts.player)
+    return v_exploit - v_current
+end
+
+function (cb::MCTSExploitabilityCallback)()
+    if iszero(rem(cb.state, cb.n))
+        push!(cb.hist, cb.state, exploitability(cb))
+    end
+    cb.state += 1
+end
+
+@recipe f(cb::MCTSExploitabilityCallback) = cb.hist
