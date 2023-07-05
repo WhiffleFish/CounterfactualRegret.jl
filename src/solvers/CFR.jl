@@ -182,7 +182,7 @@ function train!(solver::AbstractCFRSolver, N::Int; show_progress::Bool=false, cb
     solver
 end
 
-function strategy(sol::AbstractCFRSolver{K}, I::K) where K
+function strategy(sol::AbstractCFRSolver, I)
     infostate = get(sol.I, I, nothing)
     if isnothing(infostate)
         L = length(actions(sol.game, I))

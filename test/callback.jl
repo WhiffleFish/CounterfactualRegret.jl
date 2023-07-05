@@ -46,6 +46,7 @@
     @test length(split(str, "\n")) == div(train_iter, save_freq) + 2
 
     ## ModelSaver
+    game = Kuhn()
     save_dir = joinpath(pwd(), "checkpoints")
     sol = ESCFRSolver(game)
     cb = CFR.ModelSaverCallback(sol, 100; save_dir)
@@ -56,5 +57,14 @@
         policy = CFR.load_model(checkpoint)
         @test policy isa CFR.CFRPolicy
     end
+
+    policy = CFR.load_model(first(checkpoints))
+
+    I = (2,1,KuhnActionHist(0))
+    σ1 = strategy(policy, I)
+    σ2 = strategy(sol, I)
+    @test σ1 ≠ σ2
+    CFR.update_policy!(policy, sol)
+    @test strategy(policy, I) ≈ σ2
     rm(save_dir, recursive=true)
 end
