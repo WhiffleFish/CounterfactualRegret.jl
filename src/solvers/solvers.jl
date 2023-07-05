@@ -8,6 +8,8 @@ include("CFR.jl")
 export train!, strategy
 export CFRSolver
 
+include("policy.jl")
+
 include("CSMCCFR.jl")
 export CSCFRSolver
 

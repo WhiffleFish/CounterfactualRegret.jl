@@ -141,3 +141,34 @@ function (cb::MCTSExploitabilityCallback)()
 end
 
 @recipe f(cb::MCTSExploitabilityCallback) = cb.hist
+
+mutable struct ModelSaverCallback{SOL}
+    sol::SOL
+    save_every::Int
+    save_dir::String
+    pad_digits::Int
+    policy_only::Bool
+    state::Int
+    function ModelSaverCallback(sol, save_every; save_dir=joinpath(pwd(),"checkpoints"), pad_digits=9, policy_only=true)
+        new{typeof(sol)}(sol, save_every, save_dir, pad_digits, policy_only, 0)
+    end
+end
+
+function _fmt_model_str(iter, pad_digits)
+    return "model_"*lpad(iter, pad_digits, '0')*".jld2"
+end
+
+function _save_model(model, dir, iter, pad_digits)
+    FileIO.save(joinpath(dir, _fmt_model_str(iter, pad_digits)), Dict("model"=>model))
+end
+
+function (cb::ModelSaverCallback)()
+    if iszero(rem(cb.state, cb.save_every))
+        m = cb.policy_only ? CFRPolicy(cb.sol) : cb.sol
+        _save_model(m, cb.save_dir, cb.state, cb.pad_digits)
+    end
+    cb.state += 1
+end
+
+load_model(path) = FileIO.load(path)["model"]
+

@@ -1,5 +1,6 @@
 module CounterfactualRegret
 
+using FileIO
 using ProgressMeter
 using RecipesBase
 using Random
