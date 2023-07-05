@@ -1,7 +1,7 @@
 name = "CounterfactualRegret"
 uuid = "9fefe0b7-a0d5-4e12-a8ed-3472cccdfc49"
 authors = ["WhiffleFish <tylertronics@gmail.com>"]
-version = "0.5.0"
+version = "0.5.1"
 
 [deps]
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
