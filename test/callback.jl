@@ -44,4 +44,17 @@
     @test first(ecb.hist.y) > last(ecb.hist.y) > 0.0
     @test length(ecb.hist.y) == length(ecb.hist.x) == 11
     @test length(split(str, "\n")) == div(train_iter, save_freq) + 2
+
+    ## ModelSaver
+    save_dir = joinpath(pwd(), "checkpoints")
+    sol = ESCFRSolver(game)
+    cb = CFR.ModelSaverCallback(sol, 100; save_dir)
+    train!(sol, 1000; cb)
+    checkpoints = readdir(save_dir, join=true)
+    @test length(checkpoints) == 10
+    for checkpoint in checkpoints
+        policy = CFR.load_model(checkpoint)
+        @test policy isa CFR.CFRPolicy
+    end
+    rm(save_dir, recursive=true)
 end
