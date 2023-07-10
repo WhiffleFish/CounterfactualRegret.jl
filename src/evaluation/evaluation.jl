@@ -5,7 +5,14 @@ include("exploitability.jl")
 export ExploitabilitySolver, exploitability
 
 include("is-mcts.jl")
-export ISMCTS
+export ISMCTS 
 
 include("callback.jl")
-export ExploitabilityCallback
+export 
+    ExploitabilityCallback, 
+    NashConvCallback, 
+    MCTSExploitabilityCallback, 
+    MCTSNashConvCallback,
+    Throttle,
+    CallbackChain,
+    ModelSaverCallback

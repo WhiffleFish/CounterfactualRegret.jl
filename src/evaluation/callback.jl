@@ -47,6 +47,44 @@ function (cb::ExploitabilityCallback)()
     cb.state += 1
 end
 
+"""
+NashConvCallback(sol::AbstractCFRSolver, n=1)
+
+- `sol` :
+- `n`   : Frequency with which to query nash convergence e.g. `n=10` indicates checking exploitability every 10 CFR iterations
+
+Usage:
+```
+using CounterfactualRegret
+const CFR = CounterfactualRegret
+
+game = CFR.Games.Kuhn()
+sol = CFRSolver(game)
+train!(sol, 10_000, cb=NashConvCallback(sol))
+```
+"""
+mutable struct NashConvCallback{SOL<:AbstractCFRSolver, ESOL}
+    sol::SOL
+    e_sols::ESOL
+    n::Int
+    state::Int
+    hist::ExploitabilityHistory
+end
+
+function NashConvCallback(sol::AbstractCFRSolver, n::Int=1)
+    e_sols = (ExploitabilitySolver(sol, 1),  ExploitabilitySolver(sol, 2))
+    return NashConvCallback(sol, e_sols, n, 0, ExploitabilityHistory())
+end
+
+function (cb::NashConvCallback)()
+    if iszero(rem(cb.state, cb.n))
+        e1 = exploit_utility(cb.e_sols[1], cb.sol)
+        e2 = exploit_utility(cb.e_sols[2], cb.sol)
+        push!(cb.hist, cb.state, e1 + e2)
+    end
+    cb.state += 1
+end
+
 @recipe function f(hist::ExploitabilityHistory)
     xlabel --> "Training Steps"
     @series begin
@@ -57,6 +95,7 @@ end
 end
 
 @recipe f(cb::ExploitabilityCallback) = cb.hist
+@recipe f(cb::NashConvCallback) = cb.hist
 
 """
 
@@ -119,12 +158,11 @@ mutable struct MCTSExploitabilityCallback{M<:ISMCTS}
     eval_iter::Int
     state::Int
     hist::ExploitabilityHistory
-    function MCTSExploitabilityCallback(mcts::ISMCTS, n=1; eval_iter=mcts.max_iter)
-        new{typeof(mcts)}(mcts, n, eval_iter, 0, ExploitabilityHistory())
+    function MCTSExploitabilityCallback(sol::AbstractCFRSolver, n=1; kwargs...)
+        mcts = ISMCTS(sol;kwargs...)
+        new{typeof(mcts)}(mcts, n, mcts.max_iter, 0, ExploitabilityHistory())
     end
 end
-
-ExploitabilityCallback(mcts::ISMCTS, n; eval_iter=mcts.max_iter) = MCTSExploitabilityCallback(mcts, n;eval_iter) 
 
 function exploitability(cb::MCTSExploitabilityCallback)
     mcts = cb.mcts
@@ -141,6 +179,33 @@ function (cb::MCTSExploitabilityCallback)()
 end
 
 @recipe f(cb::MCTSExploitabilityCallback) = cb.hist
+
+
+mutable struct MCTSNashConvCallback{M}
+    mcts::M
+    n::Int
+    state::Int
+    hist::ExploitabilityHistory
+    function MCTSNashConvCallback(sol::AbstractCFRSolver, n=1; kwargs...)
+        tup = (ISMCTS(sol;kwargs..., player=1), ISMCTS(sol;kwargs..., player=2))
+        new{typeof(tup)}(tup, n, 0, ExploitabilityHistory())
+    end
+end
+
+function nashconv(cb::MCTSNashConvCallback)
+    u1 = run(cb.mcts[1])
+    u2 = run(cb.mcts[2])
+    return u1 + u2
+end
+
+function (cb::MCTSNashConvCallback)()
+    if iszero(rem(cb.state, cb.n))
+        push!(cb.hist, cb.state, nashconv(cb))
+    end
+    cb.state += 1
+end
+
+@recipe f(cb::MCTSNashConvCallback) = cb.hist
 
 mutable struct ModelSaverCallback{SOL}
     sol::SOL
@@ -171,4 +236,3 @@ function (cb::ModelSaverCallback)()
 end
 
 load_model(path) = FileIO.load(path)["model"]
-
