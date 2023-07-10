@@ -3,11 +3,15 @@
     game = Kuhn()
     sol = CFRSolver(game)
     cb = CFR.ExploitabilityCallback(sol, 100)
-    train!(sol, 100_000, cb = cb)
+    cb_nashconv = NashConvCallback(sol, 100)
+    train!(sol, 100_000, cb = CallbackChain(cb, cb_nashconv))
 
     @test RecipesBase.apply_recipe(Dict{Symbol,Any}(), cb) ≠ nothing
+    @test RecipesBase.apply_recipe(Dict{Symbol,Any}(), cb_nashconv) ≠ nothing
     @test length(cb.hist.y) == length(cb.hist.x) == 1_000
+    @test length(cb_nashconv.hist.y) == length(cb_nashconv.hist.x) == 1_000
     @test 0.0 < last(cb.hist.y) < 1e-2
+    @test 0.0 < last(cb_nashconv.hist.y) < 1e-2
 
     game = MatrixGame([(randn(), randn()) for i in 1:5, j in 1:5])
     sol = CFRSolver(game)
