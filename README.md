@@ -17,7 +17,7 @@ using Pkg; Pkg.add("CounterfactualRegret")
 | `ESCFRSolver` | External Sampling  |
 | `OSCFRSolver` | Outcome Sampling   |
 
-Each solver takes optional kwarg `method`, which can an instantiation of either `Vanilla`, `Plus`, or `Discount` types, which correspond to Vanilla CFR, CFR+, and discounted CFR respectively.
+Each solver takes optional kwarg `method`, which can be an instantiation of either `Vanilla`, `Plus`, or `Discount` types, which correspond to Vanilla CFR, CFR+, and discounted CFR respectively.
 
 ## External Solver Packages
 | Name | Status |
