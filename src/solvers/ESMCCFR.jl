@@ -75,7 +75,8 @@ function CFR(solver::ESCFRSolver, h, i, t)
     if isterminal(game, h)
         return utility(game, i, h)
     elseif iszero(current_player) # chance player
-        a = chance_action(game, h)
+        σ_c = chance_policy(game, h)
+        a = rand(σ_c)
         h′ = next_hist(game,h,a)
         return CFR(solver, h′, i, t)
     end

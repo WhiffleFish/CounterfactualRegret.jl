@@ -38,10 +38,10 @@ function CFR(sol::OSCFRSolver, h, p, t, π_i=1.0, π_ni=1.0, q_h=1.0)
         return utility(game, p, h)
 
     elseif iszero(current_player)
-        A = chance_actions(game, h)
-        a = rand(A)
+        σ_c = chance_policy(game, h)
+        a, p_c = randpdf(σ_c)
         h′ = next_hist(game,h,a)
-        return CFR(sol, h′, p, t, π_i, π_ni*inv(length(A)), q_h)
+        return CFR(sol, h′, p, t, π_i, π_ni*p_c, q_h)
 
     elseif current_player == p
         k = infokey(game, h)

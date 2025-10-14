@@ -1,11 +1,12 @@
 name = "CounterfactualRegret"
 uuid = "9fefe0b7-a0d5-4e12-a8ed-3472cccdfc49"
-authors = ["WhiffleFish <tylertronics@gmail.com>"]
 version = "0.5.2"
+authors = ["WhiffleFish <tylertronics@gmail.com>"]
 
 [deps]
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+POMDPTools = "7588e00f-9cae-40de-98dc-e0c70c48cdd7"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
@@ -13,7 +14,8 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 FileIO = "1"
-JLD2 = "0.4"
+JLD2 = "0.6"
+POMDPTools = "1.1.0"
 ProgressMeter = "1"
 RecipesBase = "1"
 StaticArrays = "1"

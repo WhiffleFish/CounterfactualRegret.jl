@@ -91,13 +91,12 @@ function CFR(sol::CFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
     if isterminal(game, h)
         return utility(game, i, h)
     elseif iszero(current_player) # chance player
-        A = chance_actions(game, h)
-        iLa = inv(length(A))
+        σ_c = chance_policy(game, h)
         s = 0.0
-        for a in A
-            s += CFR(sol, next_hist(game, h, a), i, t, π_i, π_ni*iLa)
+        for (a,p) in POMDPTools.weighted_iterator(σ_c)
+            s += p * CFR(sol, next_hist(game, h, a), i, t, π_i, π_ni*p)
         end
-        return s * iLa
+        return s
     end
 
     k = infokey(game, h)

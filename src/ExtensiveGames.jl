@@ -68,6 +68,16 @@ Return all chance actions available for chance player at history h
 """
 function chance_actions end
 
+"""
+    chance_policy(game::Game, h)
+
+Return distribution over chance outcomes
+"""
+function chance_policy end
+
+"""
+"""
+function randpdf end
 
 """
     next_hist(game::Game, h, a)

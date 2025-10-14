@@ -65,6 +65,7 @@ function CFR.infokey(::CoinToss, h::TossHist)
 end
 
 CFR.chance_actions(::CoinToss, ::TossHist) = (:heads, :tails)
+CFR.chance_policy(::CoinToss, ::TossHist) = POMDPTools.UnsafeUniform((:heads, :tails))
 
 CFR.initialhist(::CoinToss) = TossHist(@SVector(zeros(Int,2)), :null)
 

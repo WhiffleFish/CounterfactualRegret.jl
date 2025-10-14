@@ -4,6 +4,11 @@ using ..CounterfactualRegret
 const CFR = CounterfactualRegret
 using StaticArrays
 using RecipesBase
+import POMDPTools
+using Random
+
+include("distributions.jl")
+export SparseCat
 
 include("util.jl")
 export StaticPushVector, SPV

@@ -98,6 +98,8 @@ Chance player actions available at some history h.
 Chance player can choose from any of the available card permutations stored in `game.cards`.
 =#
 CFR.chance_actions(game::Kuhn, h::KuhnHist) = game.cards
+CFR.chance_policy(game::Kuhn, h::KuhnHist) = POMDPTools.UnsafeUniform(game.cards)
+
 
 #=
 Next history resulting from chance player action.

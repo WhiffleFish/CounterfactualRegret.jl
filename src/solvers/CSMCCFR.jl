@@ -25,10 +25,10 @@ function CFR(solver::CSCFRSolver, h, i, t, π_i=1.0, π_ni=1.0)
     if isterminal(game, h)
         return utility(game, i, h)
     elseif iszero(current_player) # chance player
-        A = chance_actions(game, h)
-        a = rand(A)
+        σ_c = chance_policy(game, h)
+        a, p = randpdf(σ_c)
         h′ = next_hist(game,h,a)
-        return CFR(solver, h′, i, t, π_i, π_ni*inv(length(A)))
+        return CFR(solver, h′, i, t, π_i, π_ni*p)
     end
     
     k = infokey(game, h)

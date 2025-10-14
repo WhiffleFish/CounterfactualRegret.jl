@@ -48,14 +48,17 @@ function add_hist!(tree::GameTree{G,H}, h::H, obs_hist::NTuple{2,Vector{UInt}}) 
     terminal = isterminal(tree.game, h)
     u1 = terminal ? utility(game, 1, h) : 0.0
     u2 = terminal ? utility(game, 2, h) : 0.0
-    A = iszero(p) ? chance_actions(game, h) : actions(game, h)
-    act = UInt(1):UInt(length(A))
 
 
     # infokey
     tree_h = if iszero(p) # chance player
+        σ_c = chance_policy(game, h)
+        A = length(POMDPTools.POMDPDistributions.support(σ_c))
+        act = UInt(1):UInt(length(A))
         TreeHist(id, h, obs_hist, p, terminal, (u1,u2), UInt[], UInt(0))
     else
+        A = actions(game, h)
+        act = UInt(1):UInt(length(A))
         player_info = obs_hist[p]
         I = terminal ? UInt(0) : get!(tree.infokey2idx, player_info) do
             push!(tree.idx2infokey, player_info)
@@ -110,6 +113,28 @@ CFR.initialhist(g::GameTree) = first(g.nodes)
 CFR.player(::GameTree, h::TreeHist) = h.player
 
 CFR.chance_actions(g::GameTree, h::TreeHist) = UInt(1):UInt(length(chance_actions(g.game, h.h)))
+
+function CFR.chance_policy(g::GameTree, h::TreeHist)
+    return num_support(chance_policy(g.game, h.h))
+end
+
+function num_support(p::POMDPTools.SparseCat)
+    return POMDPTools.SparseCat(UInt(1):UInt(length(p.vals)), p.probs)
+end
+
+function num_support(p::POMDPTools.Uniform)
+    s = POMDPTools.POMDPDistributions.support(p)
+    return POMDPTools.Uniform(UInt(1):UInt(length(s)))
+end
+
+function num_support(p::POMDPTools.UnsafeUniform)
+    s = POMDPTools.POMDPDistributions.support(p)
+    return POMDPTools.UnsafeUniform(UInt(1):UInt(length(s)))
+end
+
+function num_support(::POMDPTools.Deterministic)
+    return POMDPTools.Deterministic(UInt(1))
+end
 
 CFR.actions(g::GameTree, k::UInt) = g.actions[k]
 
